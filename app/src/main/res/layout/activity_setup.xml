@@ -41,51 +41,15 @@
             android:text="Choose Picture" />
     </LinearLayout>
 
-    <!-- Number selection buttons (0-9) -->
+    <!-- Number selection buttons (built programmatically for high contrast) -->
     <LinearLayout
         android:id="@+id/numberButtonsContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:orientation="vertical"
-        android:padding="8dp"
-        android:background="#CC000000"
-        android:visibility="gone">
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Tap your secret number:"
-            android:textColor="@android:color/white"
-            android:textSize="14sp"
-            android:layout_marginBottom="4dp"
-            android:gravity="center" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center">
-
-            <Button android:id="@+id/numBtn0" android:layout_width="48dp" android:layout_height="48dp" android:text="0" android:layout_margin="2dp" />
-            <Button android:id="@+id/numBtn1" android:layout_width="48dp" android:layout_height="48dp" android:text="1" android:layout_margin="2dp" />
-            <Button android:id="@+id/numBtn2" android:layout_width="48dp" android:layout_height="48dp" android:text="2" android:layout_margin="2dp" />
-            <Button android:id="@+id/numBtn3" android:layout_width="48dp" android:layout_height="48dp" android:text="3" android:layout_margin="2dp" />
-            <Button android:id="@+id/numBtn4" android:layout_width="48dp" android:layout_height="48dp" android:text="4" android:layout_margin="2dp" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center">
-
-            <Button android:id="@+id/numBtn5" android:layout_width="48dp" android:layout_height="48dp" android:text="5" android:layout_margin="2dp" />
-            <Button android:id="@+id/numBtn6" android:layout_width="48dp" android:layout_height="48dp" android:text="6" android:layout_margin="2dp" />
-            <Button android:id="@+id/numBtn7" android:layout_width="48dp" android:layout_height="48dp" android:text="7" android:layout_margin="2dp" />
-            <Button android:id="@+id/numBtn8" android:layout_width="48dp" android:layout_height="48dp" android:text="8" android:layout_margin="2dp" />
-            <Button android:id="@+id/numBtn9" android:layout_width="48dp" android:layout_height="48dp" android:text="9" android:layout_margin="2dp" />
-        </LinearLayout>
-    </LinearLayout>
+        android:padding="12dp"
+        android:background="#DD000000"
+        android:visibility="gone" />
 
 </FrameLayout>

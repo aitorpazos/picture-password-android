@@ -1,13 +1,14 @@
 package com.aitorpazos.picturepassword.ui.setup
 
 import android.content.Intent
+import android.graphics.Color
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.view.Gravity
 import android.view.View
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.aitorpazos.picturepassword.R
@@ -55,7 +56,7 @@ class SetupActivity : AppCompatActivity() {
         val imageView = findViewById<ImageView>(R.id.setupImageView)
         val gridView = findViewById<NumberGridView>(R.id.setupGridView)
         val actionButton = findViewById<Button>(R.id.setupActionButton)
-        val numberButtonsContainer = findViewById<View>(R.id.numberButtonsContainer)
+        val numberButtonsContainer = findViewById<LinearLayout>(R.id.numberButtonsContainer)
 
         when (step) {
             0 -> { // Pick image
@@ -77,17 +78,8 @@ class SetupActivity : AppCompatActivity() {
                 numberButtonsContainer.visibility = View.VISIBLE
                 actionButton.visibility = View.GONE
 
-                // Setup number buttons
-                for (i in 0..9) {
-                    val btnId = resources.getIdentifier("numBtn$i", "id", packageName)
-                    if (btnId != 0) {
-                        findViewById<Button>(btnId)?.setOnClickListener {
-                            selectedNumber = i
-                            gridView.highlightedDigit = i
-                            advanceToStep(2)
-                        }
-                    }
-                }
+                // Build high-contrast number buttons programmatically
+                buildNumberButtons(numberButtonsContainer)
             }
             2 -> { // Pick location
                 instructionText.text = "Step 3: Tap your secret spot on the picture\n(This is where you'll drag number $selectedNumber to unlock)"
@@ -95,9 +87,6 @@ class SetupActivity : AppCompatActivity() {
                 gridView.visibility = View.GONE
                 actionButton.visibility = View.GONE
 
-                imageView.setOnClickListener { event ->
-                    // Not ideal — use a proper touch listener
-                }
                 imageView.setOnTouchListener { v, event ->
                     if (event.action == android.view.MotionEvent.ACTION_UP) {
                         secretX = event.x / v.width
@@ -148,5 +137,84 @@ class SetupActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    /**
+     * Build high-contrast number buttons (0-9) programmatically.
+     * White text on dark rounded background with clear spacing.
+     */
+    private fun buildNumberButtons(container: LinearLayout) {
+        container.removeAllViews()
+
+        // Label
+        val label = TextView(this).apply {
+            text = "Tap your secret number:"
+            setTextColor(Color.WHITE)
+            textSize = 15f
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, dpToPx(8))
+        }
+        container.addView(label)
+
+        // Row 1: digits 0-4
+        val row1 = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            )
+        }
+        for (i in 0..4) row1.addView(createNumberButton(i))
+        container.addView(row1)
+
+        // Row 2: digits 5-9
+        val row2 = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply { topMargin = dpToPx(6) }
+        }
+        for (i in 5..9) row2.addView(createNumberButton(i))
+        container.addView(row2)
+    }
+
+    private fun createNumberButton(digit: Int): TextView {
+        val size = dpToPx(52)
+        val margin = dpToPx(5)
+
+        return TextView(this).apply {
+            text = digit.toString()
+            textSize = 22f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(size, size).apply {
+                setMargins(margin, margin, margin, margin)
+            }
+
+            // Rounded dark background with white border
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.OVAL
+                setColor(Color.argb(220, 30, 30, 30))
+                setStroke(dpToPx(2), Color.WHITE)
+            }
+
+            // Elevation for depth
+            elevation = dpToPx(4).toFloat()
+
+            setOnClickListener {
+                selectedNumber = digit
+                val gridView = findViewById<NumberGridView>(R.id.setupGridView)
+                gridView.highlightedDigit = digit
+                advanceToStep(2)
+            }
+        }
+    }
+
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
     }
 }

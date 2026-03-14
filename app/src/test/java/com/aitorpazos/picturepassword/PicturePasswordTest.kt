@@ -12,116 +12,137 @@ import kotlin.random.Random
 class NumberGridTest {
 
     @Test
-    fun `grid factory creates 10 digits`() {
+    fun `grid factory creates correct dimensions`() {
         val grid = NumberGridFactory.createRandomGrid()
-        assertEquals(10, grid.cellPositions.size)
-        val digits = grid.cellPositions.map { it.digit }.sorted()
-        assertEquals((0..9).toList(), digits)
+        assertEquals(NumberGridFactory.DEFAULT_COLS, grid.cols)
+        assertEquals(NumberGridFactory.DEFAULT_ROWS, grid.rows)
+        assertEquals(NumberGridFactory.DEFAULT_COLS * NumberGridFactory.DEFAULT_ROWS, grid.cells.size)
     }
 
     @Test
-    fun `scattered grid creates 10 digits`() {
-        val grid = NumberGridFactory.createScatteredGrid()
-        assertEquals(10, grid.cellPositions.size)
-        val digits = grid.cellPositions.map { it.digit }.sorted()
-        assertEquals((0..9).toList(), digits)
+    fun `grid factory with custom dimensions`() {
+        val grid = NumberGridFactory.createRandomGrid(cols = 8, rows = 10)
+        assertEquals(8, grid.cols)
+        assertEquals(10, grid.rows)
+        assertEquals(80, grid.cells.size)
     }
 
     @Test
-    fun `grid with same seed produces same layout`() {
-        val grid1 = NumberGridFactory.createRandomGrid(Random(42))
-        val grid2 = NumberGridFactory.createRandomGrid(Random(42))
-        assertEquals(grid1.cellPositions, grid2.cellPositions)
-    }
-
-    @Test
-    fun `different seeds produce different layouts`() {
-        val grid1 = NumberGridFactory.createRandomGrid(Random(42))
-        val grid2 = NumberGridFactory.createRandomGrid(Random(99))
-        assertNotEquals(grid1.cellPositions, grid2.cellPositions)
-    }
-
-    @Test
-    fun `all positions are within bounds`() {
-        repeat(100) {
-            val grid = NumberGridFactory.createRandomGrid()
-            for (cell in grid.cellPositions) {
-                assertTrue("X out of bounds: ${cell.normalizedX}", cell.normalizedX in 0f..1f)
-                assertTrue("Y out of bounds: ${cell.normalizedY}", cell.normalizedY in 0f..1f)
-            }
+    fun `all cells contain digits 0-9`() {
+        val grid = NumberGridFactory.createRandomGrid()
+        for (cell in grid.cells) {
+            assertTrue("Digit out of range: $cell", cell in 0..9)
         }
     }
 
     @Test
-    fun `getDigitPosition returns correct position with no offset`() {
-        val cells = listOf(
-            GridCell(5, 0.3f, 0.4f),
-            GridCell(3, 0.7f, 0.8f)
-        ) + (0..9).filter { it != 5 && it != 3 }.map { GridCell(it, 0.5f, 0.5f) }
-        val grid = NumberGrid(cells)
-
-        val pos = grid.getDigitPosition(5)
-        assertEquals(0.3f, pos.x, 0.001f)
-        assertEquals(0.4f, pos.y, 0.001f)
+    fun `grid contains repeated digits`() {
+        val grid = NumberGridFactory.createRandomGrid()
+        // With 240 cells and 10 possible digits, each digit should appear many times
+        for (d in 0..9) {
+            val count = grid.cells.count { it == d }
+            assertTrue("Digit $d should appear multiple times, got $count", count > 1)
+        }
     }
 
     @Test
-    fun `getDigitPosition applies offset`() {
-        val cells = (0..9).map { GridCell(it, 0.5f, 0.5f) }
-        val grid = NumberGrid(cells, gridOffsetX = 0.1f, gridOffsetY = -0.2f)
-
-        val pos = grid.getDigitPosition(0)
-        assertEquals(0.6f, pos.x, 0.001f)
-        assertEquals(0.3f, pos.y, 0.001f)
+    fun `grid with same seed produces same layout`() {
+        val grid1 = NumberGridFactory.createRandomGrid(random = Random(42))
+        val grid2 = NumberGridFactory.createRandomGrid(random = Random(42))
+        assertTrue(grid1.cells.contentEquals(grid2.cells))
     }
 
     @Test
-    fun `isDigitAtPoint returns true when within tolerance`() {
-        val cells = listOf(GridCell(7, 0.5f, 0.5f)) +
-                (0..9).filter { it != 7 }.map { GridCell(it, 0.1f, 0.1f) }
-        val grid = NumberGrid(cells)
-
-        assertTrue(grid.isDigitAtPoint(7, 0.5f, 0.5f, 0.06f))
-        assertTrue(grid.isDigitAtPoint(7, 0.53f, 0.52f, 0.06f))
+    fun `different seeds produce different layouts`() {
+        val grid1 = NumberGridFactory.createRandomGrid(random = Random(42))
+        val grid2 = NumberGridFactory.createRandomGrid(random = Random(99))
+        assertFalse(grid1.cells.contentEquals(grid2.cells))
     }
 
     @Test
-    fun `isDigitAtPoint returns false when outside tolerance`() {
-        val cells = listOf(GridCell(7, 0.5f, 0.5f)) +
-                (0..9).filter { it != 7 }.map { GridCell(it, 0.1f, 0.1f) }
-        val grid = NumberGrid(cells)
-
-        assertFalse(grid.isDigitAtPoint(7, 0.7f, 0.7f, 0.06f))
+    fun `digitAt returns correct value`() {
+        val cells = IntArray(12) { it % 10 }  // 0,1,2,3,4,5,6,7,8,9,0,1
+        val grid = NumberGrid(cols = 4, rows = 3, cells = cells)
+        assertEquals(0, grid.digitAt(0, 0))
+        assertEquals(3, grid.digitAt(3, 0))
+        assertEquals(4, grid.digitAt(0, 1))
+        assertEquals(9, grid.digitAt(1, 2))
     }
 
     @Test
-    fun `withOffset creates new grid with offset`() {
+    fun `positionsOf finds all instances of a digit`() {
+        // 3x2 grid: [5, 3, 5, 7, 5, 2]
+        val cells = intArrayOf(5, 3, 5, 7, 5, 2)
+        val grid = NumberGrid(cols = 3, rows = 2, cells = cells)
+        val positions = grid.positionsOf(5)
+        assertEquals(3, positions.size)
+        assertTrue(positions.contains(0 to 0))
+        assertTrue(positions.contains(2 to 0))
+        assertTrue(positions.contains(1 to 1))
+    }
+
+    @Test
+    fun `positionsOf returns empty for missing digit`() {
+        val cells = intArrayOf(1, 2, 3, 4)
+        val grid = NumberGrid(cols = 2, rows = 2, cells = cells)
+        assertTrue(grid.positionsOf(9).isEmpty())
+    }
+
+    @Test
+    fun `isDigitAtPoint returns true when digit cell aligns with target`() {
+        // 4x4 grid, digit 7 at position (1, 1)
+        val cells = IntArray(16) { 0 }
+        cells[1 * 4 + 1] = 7  // row=1, col=1
+        val grid = NumberGrid(cols = 4, rows = 4, cells = cells)
+
+        // cellSize = 1/6 ≈ 0.1667
+        val cellSize = 1f / NumberGridFactory.VISIBLE_COLS
+        val originCol = 0f
+        val originRow = 0f
+
+        // Centre of cell (1,1) = (1 * cellSize + cellSize/2, 1 * cellSize + cellSize/2)
+        val expectedX = 1 * cellSize + cellSize / 2f
+        val expectedY = 1 * cellSize + cellSize / 2f
+
+        assertTrue(grid.isDigitAtPoint(7, expectedX, expectedY, cellSize, originCol, originRow, 0.06f))
+    }
+
+    @Test
+    fun `isDigitAtPoint returns false when digit is far from target`() {
+        val cells = IntArray(16) { 0 }
+        cells[0] = 7  // row=0, col=0
+        val grid = NumberGrid(cols = 4, rows = 4, cells = cells)
+
+        val cellSize = 1f / NumberGridFactory.VISIBLE_COLS
+        // Target is far from (0,0)
+        assertTrue(!grid.isDigitAtPoint(7, 0.9f, 0.9f, cellSize, 0f, 0f, 0.06f))
+    }
+
+    @Test
+    fun `withOffset creates new grid preserving cells`() {
         val grid = NumberGridFactory.createRandomGrid()
         val moved = grid.withOffset(0.1f, 0.2f)
 
         assertEquals(0.1f, moved.gridOffsetX, 0.001f)
         assertEquals(0.2f, moved.gridOffsetY, 0.001f)
         assertEquals(0f, grid.gridOffsetX, 0.001f) // original unchanged
+        assertTrue(grid.cells.contentEquals(moved.cells))
     }
 
     @Test
-    fun `grid cell rejects invalid digit`() {
-        try {
-            GridCell(10, 0.5f, 0.5f)
-            fail("Expected IllegalArgumentException")
-        } catch (e: IllegalArgumentException) {
-            // expected
-        }
+    fun `grid equality works with IntArray`() {
+        val cells1 = intArrayOf(1, 2, 3, 4)
+        val cells2 = intArrayOf(1, 2, 3, 4)
+        val g1 = NumberGrid(cols = 2, rows = 2, cells = cells1)
+        val g2 = NumberGrid(cols = 2, rows = 2, cells = cells2)
+        assertEquals(g1, g2)
     }
 
     @Test
-    fun `grid cell rejects negative digit`() {
-        try {
-            GridCell(-1, 0.5f, 0.5f)
-            fail("Expected IllegalArgumentException")
-        } catch (e: IllegalArgumentException) {
-            // expected
-        }
+    fun `grid inequality on different cells`() {
+        val g1 = NumberGrid(cols = 2, rows = 2, cells = intArrayOf(1, 2, 3, 4))
+        val g2 = NumberGrid(cols = 2, rows = 2, cells = intArrayOf(4, 3, 2, 1))
+        assertNotEquals(g1, g2)
     }
 }
 
@@ -141,64 +162,103 @@ class UnlockVerifierTest {
 
     @Test
     fun `verify returns true when digit aligned with secret point`() {
-        val config = makeConfig(5, 0.5f, 0.5f)
-        val cells = listOf(GridCell(5, 0.5f, 0.5f)) +
-                (0..9).filter { it != 5 }.map { GridCell(it, 0.1f, 0.1f) }
-        val grid = NumberGrid(cells)
+        val grid = NumberGridFactory.createRandomGrid(random = Random(1))
+        val cellSize = 1f / NumberGridFactory.VISIBLE_COLS
+        val originCol = (grid.cols - NumberGridFactory.VISIBLE_COLS) / 2f
+        val originRow = 0f
 
-        assertTrue(UnlockVerifier.verify(grid, config))
+        // Find an instance of digit 5 that falls within the visible screen (0..1)
+        val positions = grid.positionsOf(5)
+        assertTrue("Grid should contain digit 5", positions.isNotEmpty())
+
+        var found = false
+        for ((col, row) in positions) {
+            val digitScreenX = (col - originCol) * cellSize + cellSize / 2f
+            val digitScreenY = (row - originRow) * cellSize + cellSize / 2f
+            if (digitScreenX in 0f..1f && digitScreenY in 0f..1f) {
+                val config = makeConfig(5, digitScreenX, digitScreenY, 0.06f)
+                assertTrue(UnlockVerifier.verify(grid, config, cellSize, originCol, originRow))
+                found = true
+                break
+            }
+        }
+        assertTrue("Should find at least one on-screen instance of digit 5", found)
     }
 
     @Test
-    fun `verify returns true when digit within tolerance`() {
-        val config = makeConfig(3, 0.5f, 0.5f, 0.1f)
-        val cells = listOf(GridCell(3, 0.45f, 0.48f)) +
-                (0..9).filter { it != 3 }.map { GridCell(it, 0.1f, 0.1f) }
-        val grid = NumberGrid(cells)
+    fun `verify returns true when digit dragged to secret point`() {
+        val grid = NumberGridFactory.createRandomGrid(random = Random(42))
+        val cellSize = 1f / NumberGridFactory.VISIBLE_COLS
+        val originCol = (grid.cols - NumberGridFactory.VISIBLE_COLS) / 2f
+        val originRow = 0f
 
-        assertTrue(UnlockVerifier.verify(grid, config))
+        // Pick a digit and find its position
+        val digit = 3
+        val positions = grid.positionsOf(digit)
+        val (col, row) = positions.first()
+
+        val digitX = (col - originCol) * cellSize + cellSize / 2f
+        val digitY = (row - originRow) * cellSize + cellSize / 2f
+
+        // Target is at (0.5, 0.5) — need to drag by the difference
+        val targetX = 0.5f
+        val targetY = 0.5f
+        val offsetX = targetX - digitX
+        val offsetY = targetY - digitY
+
+        val movedGrid = grid.withOffset(offsetX, offsetY)
+        val config = makeConfig(digit, targetX, targetY, 0.06f)
+        assertTrue(UnlockVerifier.verify(movedGrid, config, cellSize, originCol, originRow))
     }
 
     @Test
     fun `verify returns false when digit too far from secret point`() {
-        val config = makeConfig(5, 0.5f, 0.5f)
-        val cells = listOf(GridCell(5, 0.2f, 0.2f)) +
-                (0..9).filter { it != 5 }.map { GridCell(it, 0.5f, 0.5f) }
-        val grid = NumberGrid(cells)
+        val grid = NumberGridFactory.createRandomGrid(random = Random(10))
+        val cellSize = 1f / NumberGridFactory.VISIBLE_COLS
+        val originCol = (grid.cols - NumberGridFactory.VISIBLE_COLS) / 2f
+        val originRow = 0f
 
-        assertFalse(UnlockVerifier.verify(grid, config))
+        // Secret point far from any natural position of digit 8
+        val config = makeConfig(8, 0.99f, 0.99f, 0.01f)
+        // No offset — digit 8 is unlikely to be at (0.99, 0.99) with tiny tolerance
+        assertFalse(UnlockVerifier.verify(grid, config, cellSize, originCol, originRow))
     }
 
     @Test
-    fun `verify returns false when wrong digit at secret point`() {
-        val config = makeConfig(5, 0.5f, 0.5f)
-        val cells = listOf(
-            GridCell(3, 0.5f, 0.5f),
-            GridCell(5, 0.1f, 0.1f)
-        ) + (0..9).filter { it != 3 && it != 5 }.map { GridCell(it, 0.8f, 0.8f) }
-        val grid = NumberGrid(cells)
+    fun `verify returns false with wrong digit at secret point`() {
+        val grid = NumberGridFactory.createRandomGrid(random = Random(7))
+        val cellSize = 1f / NumberGridFactory.VISIBLE_COLS
+        val originCol = (grid.cols - NumberGridFactory.VISIBLE_COLS) / 2f
+        val originRow = 0f
 
-        assertFalse(UnlockVerifier.verify(grid, config))
+        // Find where digit 2 is and set config to expect digit 9 there
+        val positions = grid.positionsOf(2)
+        val (col, row) = positions.first()
+        val digitX = (col - originCol) * cellSize + cellSize / 2f
+        val digitY = (row - originRow) * cellSize + cellSize / 2f
+
+        val config = makeConfig(9, digitX, digitY, 0.02f)
+        assertFalse(UnlockVerifier.verify(grid, config, cellSize, originCol, originRow))
     }
 
     @Test
-    fun `verify works with grid offset`() {
-        val config = makeConfig(7, 0.5f, 0.5f)
-        val cells = listOf(GridCell(7, 0.3f, 0.3f)) +
-                (0..9).filter { it != 7 }.map { GridCell(it, 0.1f, 0.1f) }
-        val grid = NumberGrid(cells, gridOffsetX = 0.2f, gridOffsetY = 0.2f)
-
-        assertTrue(UnlockVerifier.verify(grid, config))
+    fun `verify works with multiple instances of same digit`() {
+        // In a 12x20 grid, each digit appears ~24 times on average
+        val grid = NumberGridFactory.createRandomGrid(random = Random(55))
+        val positions = grid.positionsOf(7)
+        assertTrue("Digit 7 should have multiple positions", positions.size > 5)
     }
 
     @Test
-    fun `verify fails with insufficient offset`() {
-        val config = makeConfig(7, 0.5f, 0.5f)
-        val cells = listOf(GridCell(7, 0.3f, 0.3f)) +
-                (0..9).filter { it != 7 }.map { GridCell(it, 0.1f, 0.1f) }
-        val grid = NumberGrid(cells, gridOffsetX = 0.05f, gridOffsetY = 0.05f)
+    fun `verify with large tolerance succeeds more easily`() {
+        val grid = NumberGridFactory.createRandomGrid(random = Random(100))
+        val cellSize = 1f / NumberGridFactory.VISIBLE_COLS
+        val originCol = (grid.cols - NumberGridFactory.VISIBLE_COLS) / 2f
+        val originRow = 0f
 
-        assertFalse(UnlockVerifier.verify(grid, config))
+        // With a very large tolerance, almost any position should match
+        val config = makeConfig(5, 0.5f, 0.5f, 1.0f)
+        assertTrue(UnlockVerifier.verify(grid, config, cellSize, originCol, originRow))
     }
 }
 

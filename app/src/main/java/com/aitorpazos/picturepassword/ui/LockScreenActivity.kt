@@ -56,19 +56,28 @@ class LockScreenActivity : AppCompatActivity() {
 
         // Handle grid release — check unlock
         gridView.onGridReleased = { offsetX, offsetY ->
-            val grid = gridView.numberGrid?.withOffset(offsetX, offsetY)
-            if (grid != null && UnlockVerifier.verify(grid, config!!)) {
-                statusText.text = "Unlocked! ✓"
-                Toast.makeText(this, "Unlocked!", Toast.LENGTH_SHORT).show()
-                finish()
-            } else {
-                failedAttempts++
-                statusText.text = "Try again ($failedAttempts failed)"
-                // Reset grid with new random positions
-                gridView.numberGrid = NumberGridFactory.createRandomGrid()
+            val currentGrid = gridView.numberGrid
+            if (currentGrid != null) {
+                val movedGrid = currentGrid.withOffset(offsetX, offsetY)
 
-                if (failedAttempts >= 3) {
-                    statusText.text = "Too many attempts. Use biometrics or try again."
+                // Compute the same cell size and origin that the view uses
+                val cellSizeNorm = 1f / NumberGridFactory.VISIBLE_COLS
+                val originCol = (currentGrid.cols - NumberGridFactory.VISIBLE_COLS) / 2f
+                val originRow = 0f
+
+                if (UnlockVerifier.verify(movedGrid, config!!, cellSizeNorm, originCol, originRow)) {
+                    statusText.text = "Unlocked! ✓"
+                    Toast.makeText(this, "Unlocked!", Toast.LENGTH_SHORT).show()
+                    finish()
+                } else {
+                    failedAttempts++
+                    statusText.text = "Try again ($failedAttempts failed)"
+                    // Reset grid with new random positions
+                    gridView.numberGrid = NumberGridFactory.createRandomGrid()
+
+                    if (failedAttempts >= 3) {
+                        statusText.text = "Too many attempts. Use biometrics or try again."
+                    }
                 }
             }
         }
@@ -114,6 +123,5 @@ class LockScreenActivity : AppCompatActivity() {
     @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         // Prevent back press on lock screen
-        // In a real lock screen replacement, you'd block this entirely
     }
 }

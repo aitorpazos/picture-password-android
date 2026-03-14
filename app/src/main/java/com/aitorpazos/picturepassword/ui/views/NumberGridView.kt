@@ -2,18 +2,22 @@ package com.aitorpazos.picturepassword.ui.views
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
-import android.graphics.RectF
+import android.graphics.*
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import com.aitorpazos.picturepassword.model.NumberGrid
+import com.aitorpazos.picturepassword.model.NumberGridFactory
 
 /**
- * Custom view that renders the draggable number grid overlay.
- * Digits 0-9 are displayed as circles with numbers that the user can drag as a group.
+ * Custom view that renders the draggable rectangular number grid overlay.
+ *
+ * The grid is a large matrix of digits 0-9 (with repeats). Only the portion
+ * that falls within the visible screen is drawn, but the grid extends beyond
+ * the screen in all directions so that panning always reveals more numbers.
+ *
+ * Each cell is a square whose side = screenWidth / VISIBLE_COLS.
+ * The grid is initially centred so that roughly the middle columns/rows are visible.
  */
 class NumberGridView @JvmOverloads constructor(
     context: Context,
@@ -50,55 +54,62 @@ class NumberGridView @JvmOverloads constructor(
     private var lastTouchY = 0f
     private var isDragging = false
 
+    // ---- Paints ----
+
+    /** Semi-transparent dark circle behind each digit */
     private val circlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(200, 30, 30, 30)
+        color = Color.argb(170, 20, 20, 20)
         style = Paint.Style.FILL
     }
 
+    /** White stroke around each circle for contrast */
     private val circleStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(180, 255, 255, 255)
+        color = Color.argb(200, 255, 255, 255)
         style = Paint.Style.STROKE
-        strokeWidth = 2f
+        strokeWidth = 2.5f
     }
 
+    /** Highlighted digit circle (blue) */
     private val highlightPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(200, 0, 120, 255)
+        color = Color.argb(210, 0, 120, 255)
         style = Paint.Style.FILL
     }
 
+    /** Digit text — white, bold, centred */
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
         textAlign = Paint.Align.CENTER
         isFakeBoldText = true
+        setShadowLayer(3f, 1f, 1f, Color.BLACK)
     }
 
+    /** Target point ring (setup mode) */
     private val targetPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(150, 255, 60, 60)
+        color = Color.argb(180, 255, 60, 60)
         style = Paint.Style.STROKE
         strokeWidth = 4f
     }
 
+    /** Target point fill (setup mode) */
     private val targetFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(60, 255, 60, 60)
+        color = Color.argb(50, 255, 60, 60)
         style = Paint.Style.FILL
     }
+
+    // ---- Drawing ----
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
         val w = width.toFloat()
         val h = height.toFloat()
-
         if (w == 0f || h == 0f) return
-
-        val radius = minOf(w, h) * 0.04f
-        textPaint.textSize = radius * 1.2f
 
         // Draw target point if in setup mode
         if (showTargetPoint) {
             val tx = targetPointX * w
             val ty = targetPointY * h
-            val targetRadius = minOf(w, h) * PicturePasswordConfigCompanion.DEFAULT_TOLERANCE
+            val targetRadius = minOf(w, h) * DEFAULT_TOLERANCE
             canvas.drawCircle(tx, ty, targetRadius, targetFillPaint)
             canvas.drawCircle(tx, ty, targetRadius, targetPaint)
             canvas.drawCircle(tx, ty, 6f, targetPaint)
@@ -106,26 +117,51 @@ class NumberGridView @JvmOverloads constructor(
 
         val grid = numberGrid ?: return
 
-        // Normalized offset from drag
-        val offsetX = totalDragX / w
-        val offsetY = totalDragY / h
+        // Cell size in pixels: screen width divided by visible columns
+        val cellPx = w / NumberGridFactory.VISIBLE_COLS
 
-        for (cell in grid.cellPositions) {
-            val cx = (cell.normalizedX + offsetX) * w
-            val cy = (cell.normalizedY + offsetY) * h
+        // Circle radius inside each cell
+        val radius = cellPx * 0.36f
+        textPaint.textSize = radius * 1.3f
 
-            // Skip if offscreen
-            if (cx < -radius || cx > w + radius || cy < -radius || cy > h + radius) continue
+        // Origin: the grid column/row that maps to the top-left of the screen
+        // before any drag. We centre the grid so there's room to pan in all directions.
+        val originCol = (grid.cols - NumberGridFactory.VISIBLE_COLS) / 2f
+        val originRow = 0f  // start from top; grid is tall enough to extend below screen
 
-            val paint = if (cell.digit == highlightedDigit) highlightPaint else circlePaint
-            canvas.drawCircle(cx, cy, radius, paint)
-            canvas.drawCircle(cx, cy, radius, circleStrokePaint)
+        // Pixel offset from drag
+        val dragPxX = totalDragX
+        val dragPxY = totalDragY
 
-            // Draw digit centered in circle
-            val textY = cy - (textPaint.descent() + textPaint.ascent()) / 2
-            canvas.drawText(cell.digit.toString(), cx, textY, textPaint)
+        // Determine visible cell range (with 1-cell margin for partial visibility)
+        val firstVisibleCol = ((- dragPxX / cellPx) + originCol - 1).toInt().coerceAtLeast(0)
+        val lastVisibleCol = (firstVisibleCol + NumberGridFactory.VISIBLE_COLS + 3).coerceAtMost(grid.cols - 1)
+        val firstVisibleRow = ((- dragPxY / cellPx) + originRow - 1).toInt().coerceAtLeast(0)
+        val lastVisibleRow = (firstVisibleRow + (h / cellPx).toInt() + 3).coerceAtMost(grid.rows - 1)
+
+        for (row in firstVisibleRow..lastVisibleRow) {
+            for (col in firstVisibleCol..lastVisibleCol) {
+                val digit = grid.digitAt(col, row)
+
+                // Centre of this cell in screen pixels
+                val cx = (col - originCol) * cellPx + cellPx / 2f + dragPxX
+                val cy = (row - originRow) * cellPx + cellPx / 2f + dragPxY
+
+                // Skip if fully offscreen
+                if (cx < -radius || cx > w + radius || cy < -radius || cy > h + radius) continue
+
+                val bgPaint = if (digit == highlightedDigit) highlightPaint else circlePaint
+                canvas.drawCircle(cx, cy, radius, bgPaint)
+                canvas.drawCircle(cx, cy, radius, circleStrokePaint)
+
+                // Draw digit centred
+                val textY = cy - (textPaint.descent() + textPaint.ascent()) / 2f
+                canvas.drawText(digit.toString(), cx, textY, textPaint)
+            }
         }
     }
+
+    // ---- Touch handling ----
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -148,6 +184,7 @@ class NumberGridView @JvmOverloads constructor(
                     lastTouchX = event.x
                     lastTouchY = event.y
 
+                    // Report normalised offset (fraction of screen)
                     onGridMoved?.invoke(totalDragX / width, totalDragY / height)
                     invalidate()
                 }
@@ -170,7 +207,7 @@ class NumberGridView @JvmOverloads constructor(
         invalidate()
     }
 
-    private object PicturePasswordConfigCompanion {
+    companion object {
         const val DEFAULT_TOLERANCE = 0.06f
     }
 }
