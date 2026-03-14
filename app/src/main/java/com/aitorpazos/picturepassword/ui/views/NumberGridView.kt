@@ -56,31 +56,36 @@ class NumberGridView @JvmOverloads constructor(
 
     // ---- Paints ----
 
-    /** Semi-transparent dark circle behind each digit */
-    private val circlePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(170, 20, 20, 20)
-        style = Paint.Style.FILL
-    }
-
-    /** White stroke around each circle for contrast */
-    private val circleStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(200, 255, 255, 255)
-        style = Paint.Style.STROKE
-        strokeWidth = 2.5f
-    }
-
-    /** Highlighted digit circle (blue) */
-    private val highlightPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.argb(210, 0, 120, 255)
-        style = Paint.Style.FILL
-    }
-
-    /** Digit text — white, bold, centred */
+    /** Digit text — white, thin/light weight, centred, with dark stroke outline for contrast */
     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
         textAlign = Paint.Align.CENTER
-        isFakeBoldText = true
-        setShadowLayer(3f, 1f, 1f, Color.BLACK)
+        typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+        setShadowLayer(4f, 0f, 0f, Color.BLACK)
+    }
+
+    /** Dark stroke outline drawn behind the white text for visibility on any background */
+    private val textStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(220, 0, 0, 0)
+        textAlign = Paint.Align.CENTER
+        typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+        style = Paint.Style.STROKE
+    }
+
+    /** Highlighted digit text (blue tint) */
+    private val highlightTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(255, 80, 160, 255)
+        textAlign = Paint.Align.CENTER
+        typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+        setShadowLayer(6f, 0f, 0f, Color.argb(200, 0, 80, 200))
+    }
+
+    /** Stroke outline for highlighted digit */
+    private val highlightStrokePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(220, 0, 0, 0)
+        textAlign = Paint.Align.CENTER
+        typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+        style = Paint.Style.STROKE
     }
 
     /** Target point ring (setup mode) */
@@ -120,9 +125,14 @@ class NumberGridView @JvmOverloads constructor(
         // Cell size in pixels: screen width divided by visible columns
         val cellPx = w / NumberGridFactory.VISIBLE_COLS
 
-        // Circle radius inside each cell
-        val radius = cellPx * 0.36f
-        textPaint.textSize = radius * 1.3f
+        // Text size scales with cell size — no circles, just text
+        val fontSize = cellPx * 0.55f
+        textPaint.textSize = fontSize
+        textStrokePaint.textSize = fontSize
+        textStrokePaint.strokeWidth = fontSize * 0.12f  // outline thickness
+        highlightTextPaint.textSize = fontSize
+        highlightStrokePaint.textSize = fontSize
+        highlightStrokePaint.strokeWidth = fontSize * 0.12f
 
         // Origin: the grid column/row that maps to the top-left of the screen
         // before any drag. We centre the grid so there's room to pan in all directions.
@@ -132,6 +142,9 @@ class NumberGridView @JvmOverloads constructor(
         // Pixel offset from drag
         val dragPxX = totalDragX
         val dragPxY = totalDragY
+
+        // Half-cell margin for clipping check
+        val margin = cellPx * 0.5f
 
         // Determine visible cell range (with 1-cell margin for partial visibility)
         val firstVisibleCol = ((- dragPxX / cellPx) + originCol - 1).toInt().coerceAtLeast(0)
@@ -148,15 +161,18 @@ class NumberGridView @JvmOverloads constructor(
                 val cy = (row - originRow) * cellPx + cellPx / 2f + dragPxY
 
                 // Skip if fully offscreen
-                if (cx < -radius || cx > w + radius || cy < -radius || cy > h + radius) continue
+                if (cx < -margin || cx > w + margin || cy < -margin || cy > h + margin) continue
 
-                val bgPaint = if (digit == highlightedDigit) highlightPaint else circlePaint
-                canvas.drawCircle(cx, cy, radius, bgPaint)
-                canvas.drawCircle(cx, cy, radius, circleStrokePaint)
-
-                // Draw digit centred
+                // Vertical centre for text baseline
                 val textY = cy - (textPaint.descent() + textPaint.ascent()) / 2f
-                canvas.drawText(digit.toString(), cx, textY, textPaint)
+
+                val isHighlighted = digit == highlightedDigit
+
+                // Draw dark stroke outline first (border), then fill on top
+                canvas.drawText(digit.toString(), cx, textY,
+                    if (isHighlighted) highlightStrokePaint else textStrokePaint)
+                canvas.drawText(digit.toString(), cx, textY,
+                    if (isHighlighted) highlightTextPaint else textPaint)
             }
         }
     }

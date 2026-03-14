@@ -187,23 +187,25 @@ class SetupActivity : AppCompatActivity() {
 
         return TextView(this).apply {
             text = digit.toString()
-            textSize = 22f
+            textSize = 24f
             setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
+            typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
             gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(size, size).apply {
                 setMargins(margin, margin, margin, margin)
             }
 
-            // Rounded dark background with white border
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                setColor(Color.argb(220, 30, 30, 30))
-                setStroke(dpToPx(2), Color.WHITE)
-            }
+            // Dark stroke outline via shadow for contrast on any background
+            setShadowLayer(4f, 0f, 0f, Color.BLACK)
+            paint.strokeWidth = 3f
 
-            // Elevation for depth
-            elevation = dpToPx(4).toFloat()
+            // Subtle rounded-rect background (no circle)
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dpToPx(12).toFloat()
+                setColor(Color.argb(120, 0, 0, 0))
+                setStroke(dpToPx(1), Color.argb(180, 255, 255, 255))
+            }
 
             setOnClickListener {
                 selectedNumber = digit
