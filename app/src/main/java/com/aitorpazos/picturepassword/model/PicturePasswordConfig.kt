@@ -6,9 +6,9 @@ import android.net.Uri
  * Represents the stored Picture Password configuration.
  * @param imageUri URI of the selected background image
  * @param secretNumber The digit (0-9) the user chose as their secret
- * @param secretX Normalized X coordinate (0.0-1.0) of the secret point on the image
- * @param secretY Normalized Y coordinate (0.0-1.0) of the secret point on the image
- * @param toleranceRadius Normalized radius for unlock tolerance (default ~5% of image dimension)
+ * @param secretX X coordinate as fraction of view width (0.0-1.0)
+ * @param secretY Y coordinate as fraction of view width (0.0 to aspectRatio; can exceed 1.0 on tall screens)
+ * @param toleranceRadius Tolerance radius in width-fraction units (default ~6% of screen width)
  */
 data class PicturePasswordConfig(
     val imageUri: Uri,
@@ -20,11 +20,12 @@ data class PicturePasswordConfig(
     init {
         require(secretNumber in 0..9) { "Secret number must be 0-9" }
         require(secretX in 0f..1f) { "secretX must be normalized 0.0-1.0" }
-        require(secretY in 0f..1f) { "secretY must be normalized 0.0-1.0" }
+        require(secretY >= 0f) { "secretY must be non-negative" }
         require(toleranceRadius > 0f) { "toleranceRadius must be positive" }
     }
 
     companion object {
-        const val DEFAULT_TOLERANCE = 0.06f
+        /** Tolerance radius in width-fraction units (~12% of screen width ≈ ~0.7 cell) */
+        const val DEFAULT_TOLERANCE = 0.12f
     }
 }

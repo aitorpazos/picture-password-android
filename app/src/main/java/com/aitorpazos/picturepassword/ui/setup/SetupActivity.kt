@@ -6,9 +6,9 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import android.view.Gravity
 import android.view.View
+import android.view.WindowManager
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -44,6 +44,13 @@ class SetupActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Prevent screenshots and screen recording for security
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+
         setContentView(R.layout.activity_setup)
 
         passwordStore = PasswordStore(this)
@@ -52,7 +59,6 @@ class SetupActivity : AppCompatActivity() {
     }
 
     private fun advanceToStep(step: Int) {
-        Log.d("SetupActivity", "advanceToStep($step) called")
         try {
             setupStep = step
             val instructionText = findViewById<TextView>(R.id.setupInstructionText)
@@ -64,8 +70,8 @@ class SetupActivity : AppCompatActivity() {
             when (step) {
                 0 -> { // Pick image
                     instructionText.text = "Step 1: Choose a picture for your lock screen"
-                    imageView.setImageResource(android.R.color.transparent)
-                    imageView.setBackgroundResource(R.drawable.bg_setup_empty)
+                    imageView.setImageDrawable(null)
+                    imageView.background = null
                     gridView.visibility = View.GONE
                     numberButtonsContainer.visibility = View.GONE
                     actionButton.text = "Choose Picture"
@@ -84,26 +90,26 @@ class SetupActivity : AppCompatActivity() {
                     numberButtonsContainer.visibility = View.VISIBLE
                     actionButton.visibility = View.GONE
 
-                    // Build high-contrast number buttons programmatically
                     buildNumberButtons(numberButtonsContainer)
                 }
                 2 -> { // Pick location
                     instructionText.text = "Step 3: Tap your secret spot on the picture\n(This is where you'll drag number $selectedNumber to unlock)"
                     numberButtonsContainer.visibility = View.GONE
-                    gridView.visibility = View.GONE
+                    gridView.visibility = View.VISIBLE
+                    gridView.numberGrid = null  // hide numbers during point selection
+                    gridView.showTargetPoint = false
                     actionButton.visibility = View.GONE
 
-                    imageView.setOnTouchListener { v, event ->
+                    gridView.setOnTouchListener { v, event ->
                         if (event.action == android.view.MotionEvent.ACTION_UP) {
                             secretX = event.x / v.width
-                            secretY = event.y / v.height
+                            secretY = event.y / v.width  // intentionally /width, not /height
                             secretX = secretX.coerceIn(0.05f, 0.95f)
-                            secretY = secretY.coerceIn(0.05f, 0.95f)
 
-                            gridView.visibility = View.VISIBLE
                             gridView.showTargetPoint = true
                             gridView.targetPointX = secretX
                             gridView.targetPointY = secretY
+                            gridView.toleranceRadius = PicturePasswordConfig.DEFAULT_TOLERANCE
                             gridView.invalidate()
 
                             advanceToStep(3)
@@ -113,8 +119,8 @@ class SetupActivity : AppCompatActivity() {
                     }
                 }
                 3 -> { // Confirm
-                    instructionText.text = "Your secret: Drag number $selectedNumber to the red target.\nTap 'Save' to confirm."
-                    imageView.setOnTouchListener(null)
+                    instructionText.text = "Your secret: Drag number $selectedNumber to the target.\nTap 'Save' to confirm."
+                    gridView.setOnTouchListener(null)
                     numberButtonsContainer.visibility = View.GONE
                     gridView.visibility = View.VISIBLE
                     gridView.showTargetPoint = true
@@ -144,7 +150,6 @@ class SetupActivity : AppCompatActivity() {
                 }
             }
         } catch (e: Exception) {
-            Log.e("SetupActivity", "Crash in advanceToStep($step)", e)
             Toast.makeText(this, "Setup error: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
@@ -156,7 +161,6 @@ class SetupActivity : AppCompatActivity() {
     private fun buildNumberButtons(container: LinearLayout) {
         container.removeAllViews()
 
-        // Label
         val label = TextView(this).apply {
             text = "Tap your secret number:"
             setTextColor(Color.WHITE)
@@ -205,11 +209,9 @@ class SetupActivity : AppCompatActivity() {
                 setMargins(margin, margin, margin, margin)
             }
 
-            // Dark stroke outline via shadow for contrast on any background
             setShadowLayer(4f, 0f, 0f, Color.BLACK)
             paint.strokeWidth = 3f
 
-            // Subtle rounded-rect background (no circle)
             background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = dpToPx(12).toFloat()
@@ -218,32 +220,17 @@ class SetupActivity : AppCompatActivity() {
             }
 
             setOnClickListener {
-                try {
-                    Log.d("SetupActivity", "Number button tapped: $digit")
-                    selectedNumber = digit
+                selectedNumber = digit
 
-                    // Highlight selected button visually
-                    (background as? GradientDrawable)?.apply {
-                        setColor(Color.argb(200, 25, 118, 210))
-                        setStroke(dpToPx(2), Color.argb(255, 100, 180, 255))
-                    }
+                (background as? GradientDrawable)?.apply {
+                    setColor(Color.argb(200, 25, 118, 210))
+                    setStroke(dpToPx(2), Color.argb(255, 100, 180, 255))
+                }
 
-                    // Post the step transition to avoid modifying the view tree
-                    // while the click event is still being processed
-                    this.post {
-                        try {
-                            val gridView = this@SetupActivity.findViewById<NumberGridView>(R.id.setupGridView)
-                            gridView?.highlightedDigit = digit
-                            advanceToStep(2)
-                        } catch (e: Exception) {
-                            Log.e("SetupActivity", "Crash on step transition", e)
-                            Toast.makeText(this@SetupActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
-                        }
-                    }
-                    Log.d("SetupActivity", "Number $digit selected, step transition posted")
-                } catch (e: Exception) {
-                    Log.e("SetupActivity", "Crash on number tap", e)
-                    Toast.makeText(this@SetupActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                this.post {
+                    val gridView = this@SetupActivity.findViewById<NumberGridView>(R.id.setupGridView)
+                    gridView?.highlightedDigit = digit
+                    advanceToStep(2)
                 }
             }
         }
