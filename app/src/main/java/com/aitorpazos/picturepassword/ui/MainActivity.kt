@@ -22,9 +22,11 @@ import androidx.core.content.ContextCompat
 import com.aitorpazos.picturepassword.R
 import com.aitorpazos.picturepassword.crypto.PasswordStore
 import com.aitorpazos.picturepassword.crypto.SettingsStore
+import com.aitorpazos.picturepassword.crypto.SettingsStore.ImageSource
 import com.aitorpazos.picturepassword.crypto.SettingsStore.UnlockMode
 import com.aitorpazos.picturepassword.service.LockScreenService
 import com.aitorpazos.picturepassword.ui.setup.SetupActivity
+import com.aitorpazos.picturepassword.util.WallpaperHelper
 
 class MainActivity : AppCompatActivity() {
 
@@ -296,6 +298,30 @@ class MainActivity : AppCompatActivity() {
 
         updateServiceUI(serviceToggle, serviceStatus, settingsSection)
         refreshPermissionsUI()
+        refreshWallpaperWarning()
+    }
+
+    /**
+     * Check if the system wallpaper has changed since setup and show/hide the warning banner.
+     * Also proactively checks the hash when the user opens the app (not just on SCREEN_ON).
+     */
+    private fun refreshWallpaperWarning() {
+        val banner = findViewById<LinearLayout>(R.id.wallpaperWarningBanner)
+
+        if (!passwordStore.isConfigured() || settingsStore.imageSource != ImageSource.SYSTEM_WALLPAPER) {
+            banner.visibility = View.GONE
+            return
+        }
+
+        // Proactively check hash if not already flagged
+        if (!settingsStore.wallpaperChanged) {
+            val storedHash = settingsStore.wallpaperHash
+            if (storedHash.isNotEmpty() && WallpaperHelper.hasWallpaperChanged(this, storedHash)) {
+                settingsStore.wallpaperChanged = true
+            }
+        }
+
+        banner.visibility = if (settingsStore.wallpaperChanged) View.VISIBLE else View.GONE
     }
 
     private fun updateServiceUI(

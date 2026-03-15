@@ -33,6 +33,35 @@
         android:fontFamily="sans-serif-light"
         android:layout_marginBottom="28dp" />
 
+    <!-- Wallpaper change warning banner -->
+    <LinearLayout
+        android:id="@+id/wallpaperWarningBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#33FF6B00"
+        android:padding="14dp"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="⚠️ Wallpaper Changed"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFAA44" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Your system wallpaper has changed since setup. Your password still works, but the image may look different. Please re-run setup to update."
+            android:textSize="12sp"
+            android:textColor="#CCFFCC88"
+            android:fontFamily="sans-serif-light"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
+
     <!-- Image preview card -->
     <FrameLayout
         android:id="@+id/previewCard"
