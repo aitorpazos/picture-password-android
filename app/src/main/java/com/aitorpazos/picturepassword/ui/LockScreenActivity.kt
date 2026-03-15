@@ -92,6 +92,17 @@ class LockScreenActivity : AppCompatActivity() {
             imageView.setImageResource(android.R.color.black)
         }
 
+        // Once the first frame is drawn, remove the black shield overlay from the service.
+        // This ensures the user never sees the home screen between screen-on and lock display.
+        val rootView = window.decorView
+        rootView.viewTreeObserver.addOnPreDrawListener(object : android.view.ViewTreeObserver.OnPreDrawListener {
+            override fun onPreDraw(): Boolean {
+                rootView.viewTreeObserver.removeOnPreDrawListener(this)
+                LockScreenService.removeShieldFromActivity()
+                return true
+            }
+        })
+
         // Setup based on unlock mode
         when (unlockMode) {
             UnlockMode.BIOMETRIC_ONLY -> {
@@ -212,6 +223,7 @@ class LockScreenActivity : AppCompatActivity() {
         if (unlocked) {
             statusText.text = "Unlocked! ✓"
             Toast.makeText(this, "Unlocked!", Toast.LENGTH_SHORT).show()
+            LockScreenService.removeShieldFromActivity()
             finish()
         } else if (unlockMode == UnlockMode.BOTH_REQUIRED) {
             // One factor done, prompt for the other
