@@ -85,6 +85,7 @@ class SetupActivity : AppCompatActivity() {
                     imageView.setImageURI(selectedImageUri)
                     imageView.background = null
                     gridView.visibility = View.VISIBLE
+                    gridView.alwaysShowDigits = true
                     gridView.numberGrid = NumberGridFactory.createRandomGrid()
                     gridView.highlightedDigit = -1
                     numberButtonsContainer.visibility = View.VISIBLE
@@ -96,6 +97,7 @@ class SetupActivity : AppCompatActivity() {
                     instructionText.text = "Step 3: Tap your secret spot on the picture\n(This is where you'll drag number $selectedNumber to unlock)"
                     numberButtonsContainer.visibility = View.GONE
                     gridView.visibility = View.VISIBLE
+                    gridView.alwaysShowDigits = false
                     gridView.numberGrid = null  // hide numbers during point selection
                     gridView.showTargetPoint = false
                     actionButton.visibility = View.GONE
@@ -123,6 +125,7 @@ class SetupActivity : AppCompatActivity() {
                     gridView.setOnTouchListener(null)
                     numberButtonsContainer.visibility = View.GONE
                     gridView.visibility = View.VISIBLE
+                    gridView.alwaysShowDigits = true
                     gridView.showTargetPoint = true
                     gridView.targetPointX = secretX
                     gridView.targetPointY = secretY

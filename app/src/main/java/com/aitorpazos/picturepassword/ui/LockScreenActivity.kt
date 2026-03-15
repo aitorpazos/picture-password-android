@@ -93,12 +93,16 @@ class LockScreenActivity : AppCompatActivity() {
         }
 
         // Once the first frame is drawn, remove the black shield overlay from the service.
-        // This ensures the user never sees the home screen between screen-on and lock display.
+        // We delay removal slightly to ensure the activity window is fully composited
+        // by the window manager, preventing any flash of the home screen.
         val rootView = window.decorView
         rootView.viewTreeObserver.addOnPreDrawListener(object : android.view.ViewTreeObserver.OnPreDrawListener {
             override fun onPreDraw(): Boolean {
                 rootView.viewTreeObserver.removeOnPreDrawListener(this)
-                LockScreenService.removeShieldFromActivity()
+                // Post to next frame — by then the activity window is fully visible
+                rootView.post {
+                    LockScreenService.removeShieldFromActivity()
+                }
                 return true
             }
         })
@@ -130,8 +134,8 @@ class LockScreenActivity : AppCompatActivity() {
 
         // Update hint based on mode
         statusText.text = when (unlockMode) {
-            UnlockMode.BOTH_REQUIRED -> "Drag your number to your secret spot (step 1 of 2)"
-            else -> "Drag your number to your secret spot"
+            UnlockMode.BOTH_REQUIRED -> "Touch and drag to unlock (step 1 of 2)"
+            else -> "Touch and drag to unlock"
         }
 
         // Handle grid release — check unlock

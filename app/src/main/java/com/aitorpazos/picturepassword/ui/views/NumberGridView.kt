@@ -1,11 +1,13 @@
 package com.aitorpazos.picturepassword.ui.views
 
+import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import com.aitorpazos.picturepassword.model.NumberGrid
 import com.aitorpazos.picturepassword.model.NumberGridFactory
 
@@ -55,11 +57,47 @@ class NumberGridView @JvmOverloads constructor(
     var targetPointX: Float = 0f
     var targetPointY: Float = 0f
 
+    /** When true, digits are always visible (used during setup). */
+    var alwaysShowDigits: Boolean = false
+        set(value) {
+            field = value
+            if (value) {
+                gridAlpha = 1f
+                fadeAnimator?.cancel()
+            }
+            invalidate()
+        }
+
     private var totalDragX = 0f
     private var totalDragY = 0f
     private var lastTouchX = 0f
     private var lastTouchY = 0f
     private var isDragging = false
+
+    /** Current alpha for the digit grid (0 = invisible, 1 = fully visible) */
+    private var gridAlpha = 0f
+
+    /** Animator for smooth fade in/out */
+    private var fadeAnimator: ValueAnimator? = null
+
+    /** Delay before fading out after touch release (ms) */
+    private val fadeOutDelayMs = 400L
+
+    /** Runnable that triggers fade-out after delay */
+    private val fadeOutRunnable = Runnable { animateGridAlpha(0f) }
+
+    private fun animateGridAlpha(target: Float) {
+        fadeAnimator?.cancel()
+        fadeAnimator = ValueAnimator.ofFloat(gridAlpha, target).apply {
+            duration = if (target > 0f) 150L else 300L  // fade in fast, fade out slow
+            interpolator = AccelerateDecelerateInterpolator()
+            addUpdateListener { anim ->
+                gridAlpha = anim.animatedValue as Float
+                invalidate()
+            }
+            start()
+        }
+    }
 
     // ---- Paints ----
 
@@ -135,17 +173,25 @@ class NumberGridView @JvmOverloads constructor(
 
         val grid = numberGrid ?: return
 
+        // Determine effective alpha for digits
+        val effectiveAlpha = if (alwaysShowDigits) 1f else gridAlpha
+        if (effectiveAlpha <= 0f) return  // nothing to draw
+
         // Cell size in pixels: screen width divided by visible columns
         val cellPx = w / visibleCols
 
         // Text size scales with cell size — no circles, just text
         val fontSize = cellPx * 0.55f
         textPaint.textSize = fontSize
+        textPaint.alpha = (255 * effectiveAlpha).toInt()
         textStrokePaint.textSize = fontSize
         textStrokePaint.strokeWidth = fontSize * 0.12f
+        textStrokePaint.alpha = (220 * effectiveAlpha).toInt()
         highlightTextPaint.textSize = fontSize
+        highlightTextPaint.alpha = (255 * effectiveAlpha).toInt()
         highlightStrokePaint.textSize = fontSize
         highlightStrokePaint.strokeWidth = fontSize * 0.12f
+        highlightStrokePaint.alpha = (220 * effectiveAlpha).toInt()
 
         // Origin: the grid column/row that maps to the top-left of the screen
         // before any drag. We centre the grid so there's room to pan in all directions.
@@ -208,6 +254,11 @@ class NumberGridView @JvmOverloads constructor(
                 lastTouchY = event.y
                 isDragging = true
                 parent?.requestDisallowInterceptTouchEvent(true)
+                // Fade in the grid when touch starts
+                if (!alwaysShowDigits) {
+                    removeCallbacks(fadeOutRunnable)
+                    animateGridAlpha(1f)
+                }
                 return true
             }
             MotionEvent.ACTION_MOVE -> {
@@ -228,6 +279,10 @@ class NumberGridView @JvmOverloads constructor(
                 if (isDragging) {
                     isDragging = false
                     onGridReleased?.invoke(totalDragX / width, totalDragY / width)
+                    // Schedule fade out after a short delay
+                    if (!alwaysShowDigits) {
+                        postDelayed(fadeOutRunnable, fadeOutDelayMs)
+                    }
                 }
                 return true
             }
@@ -238,6 +293,11 @@ class NumberGridView @JvmOverloads constructor(
     fun resetDrag() {
         totalDragX = 0f
         totalDragY = 0f
+        if (!alwaysShowDigits) {
+            gridAlpha = 0f
+            fadeAnimator?.cancel()
+            removeCallbacks(fadeOutRunnable)
+        }
         invalidate()
     }
 
