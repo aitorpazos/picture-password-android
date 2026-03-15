@@ -7,21 +7,28 @@ import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.aitorpazos.picturepassword.R
 import com.aitorpazos.picturepassword.crypto.PasswordStore
+import com.aitorpazos.picturepassword.crypto.SettingsStore
+import com.aitorpazos.picturepassword.crypto.SettingsStore.UnlockMode
+import com.aitorpazos.picturepassword.service.LockScreenService
 import com.aitorpazos.picturepassword.ui.setup.SetupActivity
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var passwordStore: PasswordStore
+    private lateinit var settingsStore: SettingsStore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         passwordStore = PasswordStore(this)
+        settingsStore = SettingsStore(this)
 
         val statusText = findViewById<TextView>(R.id.statusText)
         val setupButton = findViewById<Button>(R.id.setupButton)
@@ -30,6 +37,18 @@ class MainActivity : AppCompatActivity() {
         val previewImage = findViewById<ImageView>(R.id.previewImage)
         val previewCard = findViewById<FrameLayout>(R.id.previewCard)
         val placeholderContent = findViewById<LinearLayout>(R.id.placeholderContent)
+
+        // Service toggle
+        val serviceToggle = findViewById<Button>(R.id.serviceToggleButton)
+        val serviceStatus = findViewById<TextView>(R.id.serviceStatusText)
+
+        // Unlock mode radio group
+        val unlockModeGroup = findViewById<RadioGroup>(R.id.unlockModeGroup)
+        val settingsSection = findViewById<LinearLayout>(R.id.settingsSection)
+        val radioPictureOnly = findViewById<RadioButton>(R.id.radioPictureOnly)
+        val radioBiometricOnly = findViewById<RadioButton>(R.id.radioBiometricOnly)
+        val radioBothRequired = findViewById<RadioButton>(R.id.radioBothRequired)
+        val radioEither = findViewById<RadioButton>(R.id.radioEither)
 
         setupButton.setOnClickListener {
             startActivity(Intent(this, SetupActivity::class.java))
@@ -41,10 +60,46 @@ class MainActivity : AppCompatActivity() {
 
         clearButton.setOnClickListener {
             passwordStore.clear()
-            updateUI(statusText, testButton, clearButton, previewImage, previewCard, placeholderContent)
+            settingsStore.serviceEnabled = false
+            LockScreenService.stop(this)
+            updateUI(statusText, testButton, clearButton, previewImage, previewCard, placeholderContent,
+                serviceToggle, serviceStatus, settingsSection)
         }
 
-        updateUI(statusText, testButton, clearButton, previewImage, previewCard, placeholderContent)
+        // Service toggle
+        serviceToggle.setOnClickListener {
+            if (settingsStore.serviceEnabled) {
+                settingsStore.serviceEnabled = false
+                LockScreenService.stop(this)
+            } else {
+                if (passwordStore.isConfigured()) {
+                    settingsStore.serviceEnabled = true
+                    LockScreenService.start(this)
+                }
+            }
+            updateServiceUI(serviceToggle, serviceStatus, settingsSection)
+        }
+
+        // Unlock mode selection
+        when (settingsStore.unlockMode) {
+            UnlockMode.PICTURE_ONLY -> radioPictureOnly.isChecked = true
+            UnlockMode.BIOMETRIC_ONLY -> radioBiometricOnly.isChecked = true
+            UnlockMode.BOTH_REQUIRED -> radioBothRequired.isChecked = true
+            UnlockMode.EITHER -> radioEither.isChecked = true
+        }
+
+        unlockModeGroup.setOnCheckedChangeListener { _, checkedId ->
+            settingsStore.unlockMode = when (checkedId) {
+                R.id.radioPictureOnly -> UnlockMode.PICTURE_ONLY
+                R.id.radioBiometricOnly -> UnlockMode.BIOMETRIC_ONLY
+                R.id.radioBothRequired -> UnlockMode.BOTH_REQUIRED
+                R.id.radioEither -> UnlockMode.EITHER
+                else -> UnlockMode.EITHER
+            }
+        }
+
+        updateUI(statusText, testButton, clearButton, previewImage, previewCard, placeholderContent,
+            serviceToggle, serviceStatus, settingsSection)
     }
 
     override fun onResume() {
@@ -55,7 +110,11 @@ class MainActivity : AppCompatActivity() {
         val previewImage = findViewById<ImageView>(R.id.previewImage)
         val previewCard = findViewById<FrameLayout>(R.id.previewCard)
         val placeholderContent = findViewById<LinearLayout>(R.id.placeholderContent)
-        updateUI(statusText, testButton, clearButton, previewImage, previewCard, placeholderContent)
+        val serviceToggle = findViewById<Button>(R.id.serviceToggleButton)
+        val serviceStatus = findViewById<TextView>(R.id.serviceStatusText)
+        val settingsSection = findViewById<LinearLayout>(R.id.settingsSection)
+        updateUI(statusText, testButton, clearButton, previewImage, previewCard, placeholderContent,
+            serviceToggle, serviceStatus, settingsSection)
     }
 
     private fun updateUI(
@@ -64,7 +123,10 @@ class MainActivity : AppCompatActivity() {
         clearButton: Button,
         previewImage: ImageView,
         previewCard: FrameLayout,
-        placeholderContent: LinearLayout
+        placeholderContent: LinearLayout,
+        serviceToggle: Button,
+        serviceStatus: TextView,
+        settingsSection: LinearLayout
     ) {
         val configured = passwordStore.isConfigured()
         if (configured) {
@@ -73,6 +135,8 @@ class MainActivity : AppCompatActivity() {
             testButton.alpha = 1.0f
             clearButton.isEnabled = true
             clearButton.alpha = 1.0f
+            serviceToggle.isEnabled = true
+            serviceToggle.alpha = 1.0f
             val config = passwordStore.load()
             if (config != null) {
                 try {
@@ -93,7 +157,34 @@ class MainActivity : AppCompatActivity() {
             testButton.alpha = 0.4f
             clearButton.isEnabled = false
             clearButton.alpha = 0.4f
+            serviceToggle.isEnabled = false
+            serviceToggle.alpha = 0.4f
             showPlaceholder(previewImage, placeholderContent, previewCard)
+        }
+
+        updateServiceUI(serviceToggle, serviceStatus, settingsSection)
+    }
+
+    private fun updateServiceUI(
+        serviceToggle: Button,
+        serviceStatus: TextView,
+        settingsSection: LinearLayout
+    ) {
+        val enabled = settingsStore.serviceEnabled
+        if (enabled) {
+            serviceToggle.text = "Disable Lock Screen"
+            serviceToggle.setBackgroundResource(R.drawable.bg_button_danger)
+            serviceToggle.setTextColor(0xAAFF6B6BL.toInt())
+            serviceStatus.text = "🛡️ Lock screen service is active"
+            serviceStatus.setTextColor(0xFF81C784.toInt())
+            settingsSection.visibility = View.VISIBLE
+        } else {
+            serviceToggle.text = "Enable as Lock Screen"
+            serviceToggle.setBackgroundResource(R.drawable.bg_button_primary)
+            serviceToggle.setTextColor(0xFFFFFFFF.toInt())
+            serviceStatus.text = "Lock screen service is off"
+            serviceStatus.setTextColor(0x88FFFFFF.toInt())
+            settingsSection.visibility = View.GONE
         }
     }
 
