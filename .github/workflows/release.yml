@@ -26,22 +26,49 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Decode keystore
+        run: |
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > release-keystore.jks
+          fi
+        # Falls back to repo keystore if secret not set
+
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest
 
-      - name: Build release APK
+      - name: Build release APKs (per-ABI + universal)
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'REDACTED' }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'picture-password' }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'REDACTED' }}
         run: ./gradlew assembleRelease
 
-      - name: Rename APK
+      - name: Rename APKs
         run: |
           VERSION=${GITHUB_REF_NAME#v}
-          cp app/build/outputs/apk/release/app-release-unsigned.apk \
-             picture-password-${VERSION}.apk
+          APK_DIR=app/build/outputs/apk/release
+
+          # Map ABI filter names to friendly names
+          for apk in ${APK_DIR}/app-*-release.apk; do
+            filename=$(basename "$apk")
+            if echo "$filename" | grep -q "universal"; then
+              cp "$apk" "picture-password-${VERSION}-universal.apk"
+            elif echo "$filename" | grep -q "arm64"; then
+              cp "$apk" "picture-password-${VERSION}-arm64-v8a.apk"
+            elif echo "$filename" | grep -q "armeabi"; then
+              cp "$apk" "picture-password-${VERSION}-armeabi-v7a.apk"
+            elif echo "$filename" | grep -q "x86_64"; then
+              cp "$apk" "picture-password-${VERSION}-x86_64.apk"
+            elif echo "$filename" | grep -q "x86"; then
+              cp "$apk" "picture-password-${VERSION}-x86.apk"
+            fi
+          done
+
+          ls -la picture-password-*.apk
 
       - name: Generate changelog
         id: changelog
         run: |
-          # Get commits since previous tag
           TAG_COUNT=$(git tag --sort=-version:refname | wc -l | tr -d ' ')
           if [ "$TAG_COUNT" -le 1 ]; then
             CHANGELOG=$(git log --oneline --no-decorate)
@@ -62,11 +89,22 @@ jobs:
 
             ${{ steps.changelog.outputs.changelog }}
 
+            ## Downloads
+
+            | APK | Architecture | Devices |
+            |-----|-------------|---------|
+            | `arm64-v8a` | 64-bit ARM | **Most modern phones** (Pixel, Samsung Galaxy S/A series, OnePlus, etc.) |
+            | `armeabi-v7a` | 32-bit ARM | Older phones |
+            | `x86_64` | 64-bit x86 | Emulators, Chromebooks |
+            | `x86` | 32-bit x86 | Older emulators |
+            | `universal` | All architectures | Works everywhere (larger file) |
+
+            > 💡 **Not sure which to pick?** Download `arm64-v8a` for most modern Android phones, or `universal` if unsure.
+
             ## Installation
 
-            Download the APK and install on your Android device (Android 9+).
-
-            > ⚠️ This is an unsigned release APK. You may need to enable "Install from unknown sources" in your device settings.
+            Download the APK for your device architecture and install (Android 9+).
+            You may need to enable "Install from unknown sources" in your device settings.
           files: picture-password-*.apk
           draft: false
           prerelease: false
