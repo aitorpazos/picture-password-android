@@ -37,6 +37,10 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission()
     ) { _ -> refreshPermissionsUI() }
 
+    private val mediaPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ -> refreshPermissionsUI() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -199,6 +203,20 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(Settings.ACTION_SETTINGS))
             }
         }
+
+        // Media / wallpaper permission
+        findViewById<View>(R.id.permMedia).setOnClickListener {
+            val perm = mediaPermission()
+            if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
+                mediaPermissionLauncher.launch(perm)
+            } else {
+                // Already granted — open app permissions settings
+                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = Uri.parse("package:$packageName")
+                }
+                startActivity(intent)
+            }
+        }
     }
 
     private fun openAppNotificationSettings() {
@@ -240,6 +258,17 @@ class MainActivity : AppCompatActivity() {
         // Restricted settings — we can't directly check this, so we infer from overlay
         // If overlay is granted, restricted settings must have been allowed
         updatePermStatus(R.id.permRestrictedStatus, hasOverlay)
+
+        // Media / wallpaper permission — only show when using system wallpaper
+        val permMediaRow = findViewById<LinearLayout>(R.id.permMedia)
+        if (settingsStore.imageSource == ImageSource.SYSTEM_WALLPAPER) {
+            permMediaRow.visibility = View.VISIBLE
+            val hasMedia = ContextCompat.checkSelfPermission(this, mediaPermission()) ==
+                PackageManager.PERMISSION_GRANTED
+            updatePermStatus(R.id.permMediaStatus, hasMedia)
+        } else {
+            permMediaRow.visibility = View.GONE
+        }
     }
 
     private fun updatePermStatus(textViewId: Int, granted: Boolean) {
@@ -355,5 +384,14 @@ class MainActivity : AppCompatActivity() {
         previewImage.visibility = View.GONE
         placeholderContent.visibility = View.VISIBLE
         previewCard.setBackgroundResource(R.drawable.bg_image_placeholder)
+    }
+
+    /** The runtime permission needed to read the wallpaper on this API level */
+    private fun mediaPermission(): String {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
     }
 }

@@ -1,10 +1,13 @@
 package com.aitorpazos.picturepassword.ui.setup
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
@@ -12,6 +15,7 @@ import android.view.WindowManager
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.aitorpazos.picturepassword.R
 import com.aitorpazos.picturepassword.crypto.PasswordStore
 import com.aitorpazos.picturepassword.crypto.SettingsStore
@@ -32,6 +36,22 @@ class SetupActivity : AppCompatActivity() {
     private var secretX: Float = -1f
     private var secretY: Float = -1f
     private var setupStep = 0 // 0=pick image source, 1=pick number, 2=pick location, 3=confirm
+
+    /** Permission launcher for wallpaper/media access */
+    private val wallpaperPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            // Permission granted — try wallpaper again
+            tryUseSystemWallpaper()
+        } else {
+            Toast.makeText(
+                this,
+                "Media permission denied. Cannot read system wallpaper.\nGo to Settings → Apps → Picture Password → Permissions → Photos and videos.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
 
     private val imagePickerLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -216,30 +236,34 @@ class SetupActivity : AppCompatActivity() {
         }
         container.addView(galleryBtn)
 
-        // System wallpaper button
-        val wallpaperBitmap = WallpaperHelper.getLockScreenBitmap(this)
+        // System wallpaper button — always enabled; will request permission if needed
         val wallpaperBtn = createSourceButton("📱  Use system wallpaper") {
-            if (wallpaperBitmap != null) {
-                selectedImageSource = ImageSource.SYSTEM_WALLPAPER
-                selectedImageUri = null
-                advanceToStep(1)
-            } else {
-                Toast.makeText(this, "Cannot read system wallpaper.\nIt may be a live wallpaper or permission is missing.", Toast.LENGTH_LONG).show()
-            }
+            tryUseSystemWallpaper()
         }
         container.addView(wallpaperBtn)
 
-        if (wallpaperBitmap == null) {
-            wallpaperBtn.alpha = 0.4f
-
+        // Show hint if wallpaper is not currently readable (but button stays tappable)
+        if (!hasWallpaperPermission()) {
             val hint = TextView(this).apply {
-                text = "⚠️ System wallpaper not available (live wallpaper or no permission)"
-                setTextColor(Color.argb(120, 255, 200, 100))
+                text = "ℹ️ Media permission will be requested when tapped"
+                setTextColor(Color.argb(120, 150, 200, 255))
                 textSize = 11f
                 gravity = Gravity.CENTER
                 setPadding(0, dpToPx(6), 0, 0)
             }
             container.addView(hint)
+        } else {
+            val wallpaperBitmap = WallpaperHelper.getLockScreenBitmap(this)
+            if (wallpaperBitmap == null) {
+                val hint = TextView(this).apply {
+                    text = "⚠️ System wallpaper not available (may be a live wallpaper)"
+                    setTextColor(Color.argb(120, 255, 200, 100))
+                    textSize = 11f
+                    gravity = Gravity.CENTER
+                    setPadding(0, dpToPx(6), 0, 0)
+                }
+                container.addView(hint)
+            }
         }
     }
 
@@ -358,5 +382,45 @@ class SetupActivity : AppCompatActivity() {
     companion object {
         /** Sentinel URI stored in PasswordStore when using system wallpaper */
         const val WALLPAPER_SENTINEL_URI = "picturepassword://system-wallpaper"
+    }
+
+    // ---- Wallpaper permission helpers ----
+
+    /** The runtime permission needed to read the wallpaper on this API level */
+    private fun wallpaperPermission(): String {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            Manifest.permission.READ_MEDIA_IMAGES
+        } else {
+            Manifest.permission.READ_EXTERNAL_STORAGE
+        }
+    }
+
+    /** Whether the wallpaper-read permission is already granted */
+    private fun hasWallpaperPermission(): Boolean {
+        return ContextCompat.checkSelfPermission(this, wallpaperPermission()) ==
+            PackageManager.PERMISSION_GRANTED
+    }
+
+    /**
+     * Attempt to use the system wallpaper.
+     * If the bitmap is readable, proceed to step 1.
+     * If not and permission is missing, request it.
+     * Otherwise show an error (live wallpaper, etc.).
+     */
+    private fun tryUseSystemWallpaper() {
+        val bitmap = WallpaperHelper.getLockScreenBitmap(this)
+        if (bitmap != null) {
+            selectedImageSource = ImageSource.SYSTEM_WALLPAPER
+            selectedImageUri = null
+            advanceToStep(1)
+        } else if (!hasWallpaperPermission()) {
+            wallpaperPermissionLauncher.launch(wallpaperPermission())
+        } else {
+            Toast.makeText(
+                this,
+                "Cannot read system wallpaper.\nIt may be a live wallpaper or otherwise inaccessible.",
+                Toast.LENGTH_LONG
+            ).show()
+        }
     }
 }
