@@ -18,7 +18,9 @@ import com.aitorpazos.picturepassword.model.NumberGridFactory
 import com.aitorpazos.picturepassword.model.PicturePasswordConfig
 import com.aitorpazos.picturepassword.model.UnlockVerifier
 import com.aitorpazos.picturepassword.service.LockScreenService
+import com.aitorpazos.picturepassword.ui.setup.SetupActivity
 import com.aitorpazos.picturepassword.ui.views.NumberGridView
+import com.aitorpazos.picturepassword.util.WallpaperHelper
 
 /**
  * Lock screen activity that displays the picture password unlock interface.
@@ -87,7 +89,17 @@ class LockScreenActivity : AppCompatActivity() {
 
         // Set background image
         try {
-            imageView.setImageURI(config!!.imageUri)
+            val isSystemWallpaper = config!!.imageUri.toString() == SetupActivity.WALLPAPER_SENTINEL_URI
+            if (isSystemWallpaper) {
+                val bitmap = WallpaperHelper.getLockScreenBitmap(this)
+                if (bitmap != null) {
+                    imageView.setImageBitmap(bitmap)
+                } else {
+                    imageView.setImageResource(android.R.color.black)
+                }
+            } else {
+                imageView.setImageURI(config!!.imageUri)
+            }
         } catch (e: Exception) {
             imageView.setImageResource(android.R.color.black)
         }

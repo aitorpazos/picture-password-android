@@ -14,19 +14,24 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.aitorpazos.picturepassword.R
 import com.aitorpazos.picturepassword.crypto.PasswordStore
+import com.aitorpazos.picturepassword.crypto.SettingsStore
+import com.aitorpazos.picturepassword.crypto.SettingsStore.ImageSource
 import com.aitorpazos.picturepassword.model.NumberGridFactory
 import com.aitorpazos.picturepassword.model.PicturePasswordConfig
 import com.aitorpazos.picturepassword.ui.views.NumberGridView
+import com.aitorpazos.picturepassword.util.WallpaperHelper
 
 class SetupActivity : AppCompatActivity() {
 
     private lateinit var passwordStore: PasswordStore
+    private lateinit var settingsStore: SettingsStore
 
     private var selectedImageUri: Uri? = null
+    private var selectedImageSource: ImageSource = ImageSource.CUSTOM
     private var selectedNumber: Int = -1
     private var secretX: Float = -1f
     private var secretY: Float = -1f
-    private var setupStep = 0 // 0=pick image, 1=pick number, 2=pick location, 3=confirm
+    private var setupStep = 0 // 0=pick image source, 1=pick number, 2=pick location, 3=confirm
 
     private val imagePickerLauncher = registerForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -38,6 +43,7 @@ class SetupActivity : AppCompatActivity() {
                 Intent.FLAG_GRANT_READ_URI_PERMISSION
             )
             selectedImageUri = uri
+            selectedImageSource = ImageSource.CUSTOM
             advanceToStep(1)
         }
     }
@@ -54,6 +60,7 @@ class SetupActivity : AppCompatActivity() {
         setContentView(R.layout.activity_setup)
 
         passwordStore = PasswordStore(this)
+        settingsStore = SettingsStore(this)
 
         advanceToStep(0)
     }
@@ -68,21 +75,32 @@ class SetupActivity : AppCompatActivity() {
             val numberButtonsContainer = findViewById<LinearLayout>(R.id.numberButtonsContainer)
 
             when (step) {
-                0 -> { // Pick image
+                0 -> { // Pick image source
                     instructionText.text = "Step 1: Choose a picture for your lock screen"
                     imageView.setImageDrawable(null)
                     imageView.background = null
                     gridView.visibility = View.GONE
                     numberButtonsContainer.visibility = View.GONE
-                    actionButton.text = "Choose Picture"
-                    actionButton.visibility = View.VISIBLE
-                    actionButton.setOnClickListener {
-                        imagePickerLauncher.launch(arrayOf("image/*"))
-                    }
+                    actionButton.visibility = View.GONE
+
+                    // Build image source selection buttons
+                    buildImageSourceButtons(numberButtonsContainer)
+                    numberButtonsContainer.visibility = View.VISIBLE
                 }
                 1 -> { // Pick number
                     instructionText.text = "Step 2: Choose your secret number (0-9)"
-                    imageView.setImageURI(selectedImageUri)
+                    if (selectedImageSource == ImageSource.SYSTEM_WALLPAPER) {
+                        val bitmap = WallpaperHelper.getLockScreenBitmap(this)
+                        if (bitmap != null) {
+                            imageView.setImageBitmap(bitmap)
+                        } else {
+                            Toast.makeText(this, "Cannot read system wallpaper", Toast.LENGTH_SHORT).show()
+                            advanceToStep(0)
+                            return
+                        }
+                    } else {
+                        imageView.setImageURI(selectedImageUri)
+                    }
                     imageView.background = null
                     gridView.visibility = View.VISIBLE
                     gridView.alwaysShowDigits = true
@@ -135,8 +153,20 @@ class SetupActivity : AppCompatActivity() {
                     actionButton.text = "Save Picture Password"
                     actionButton.visibility = View.VISIBLE
                     actionButton.setOnClickListener {
-                        val uri = selectedImageUri
-                        if (uri != null && selectedNumber in 0..9 && secretX >= 0 && secretY >= 0) {
+                        val hasImage = if (selectedImageSource == ImageSource.SYSTEM_WALLPAPER) {
+                            WallpaperHelper.getLockScreenBitmap(this) != null
+                        } else {
+                            selectedImageUri != null
+                        }
+
+                        if (hasImage && selectedNumber in 0..9 && secretX >= 0 && secretY >= 0) {
+                            // For system wallpaper, we use a sentinel URI
+                            val uri = if (selectedImageSource == ImageSource.SYSTEM_WALLPAPER) {
+                                Uri.parse(WALLPAPER_SENTINEL_URI)
+                            } else {
+                                selectedImageUri!!
+                            }
+
                             val config = PicturePasswordConfig(
                                 imageUri = uri,
                                 secretNumber = selectedNumber,
@@ -144,6 +174,14 @@ class SetupActivity : AppCompatActivity() {
                                 secretY = secretY
                             )
                             passwordStore.save(config)
+
+                            // Save image source and wallpaper hash
+                            settingsStore.imageSource = selectedImageSource
+                            if (selectedImageSource == ImageSource.SYSTEM_WALLPAPER) {
+                                settingsStore.wallpaperHash = WallpaperHelper.computeWallpaperHash(this)
+                                settingsStore.wallpaperChanged = false
+                            }
+
                             Toast.makeText(this, "Picture Password saved!", Toast.LENGTH_SHORT).show()
                             finish()
                         } else {
@@ -154,6 +192,80 @@ class SetupActivity : AppCompatActivity() {
             }
         } catch (e: Exception) {
             Toast.makeText(this, "Setup error: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    /**
+     * Build image source selection buttons: "Choose from gallery" and "Use system wallpaper"
+     */
+    private fun buildImageSourceButtons(container: LinearLayout) {
+        container.removeAllViews()
+
+        val label = TextView(this).apply {
+            text = "Choose image source:"
+            setTextColor(Color.WHITE)
+            textSize = 15f
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, dpToPx(12))
+        }
+        container.addView(label)
+
+        // Gallery button
+        val galleryBtn = createSourceButton("🖼️  Choose from gallery") {
+            imagePickerLauncher.launch(arrayOf("image/*"))
+        }
+        container.addView(galleryBtn)
+
+        // System wallpaper button
+        val wallpaperBitmap = WallpaperHelper.getLockScreenBitmap(this)
+        val wallpaperBtn = createSourceButton("📱  Use system wallpaper") {
+            if (wallpaperBitmap != null) {
+                selectedImageSource = ImageSource.SYSTEM_WALLPAPER
+                selectedImageUri = null
+                advanceToStep(1)
+            } else {
+                Toast.makeText(this, "Cannot read system wallpaper.\nIt may be a live wallpaper or permission is missing.", Toast.LENGTH_LONG).show()
+            }
+        }
+        container.addView(wallpaperBtn)
+
+        if (wallpaperBitmap == null) {
+            wallpaperBtn.alpha = 0.4f
+
+            val hint = TextView(this).apply {
+                text = "⚠️ System wallpaper not available (live wallpaper or no permission)"
+                setTextColor(Color.argb(120, 255, 200, 100))
+                textSize = 11f
+                gravity = Gravity.CENTER
+                setPadding(0, dpToPx(6), 0, 0)
+            }
+            container.addView(hint)
+        }
+    }
+
+    private fun createSourceButton(text: String, onClick: () -> Unit): TextView {
+        return TextView(this).apply {
+            this.text = text
+            textSize = 15f
+            setTextColor(Color.WHITE)
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            gravity = Gravity.CENTER
+            setPadding(dpToPx(16), dpToPx(14), dpToPx(16), dpToPx(14))
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(dpToPx(8), dpToPx(4), dpToPx(8), dpToPx(4))
+            }
+
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dpToPx(12).toFloat()
+                setColor(Color.argb(100, 40, 40, 60))
+                setStroke(dpToPx(1), Color.argb(120, 255, 255, 255))
+            }
+
+            setOnClickListener { onClick() }
         }
     }
 
@@ -241,5 +353,10 @@ class SetupActivity : AppCompatActivity() {
 
     private fun dpToPx(dp: Int): Int {
         return (dp * resources.displayMetrics.density).toInt()
+    }
+
+    companion object {
+        /** Sentinel URI stored in PasswordStore when using system wallpaper */
+        const val WALLPAPER_SENTINEL_URI = "picturepassword://system-wallpaper"
     }
 }

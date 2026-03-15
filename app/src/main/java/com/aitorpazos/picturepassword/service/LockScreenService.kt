@@ -17,8 +17,10 @@ import androidx.core.app.NotificationCompat
 import com.aitorpazos.picturepassword.R
 import com.aitorpazos.picturepassword.crypto.PasswordStore
 import com.aitorpazos.picturepassword.crypto.SettingsStore
+import com.aitorpazos.picturepassword.crypto.SettingsStore.ImageSource
 import com.aitorpazos.picturepassword.ui.LockScreenActivity
 import com.aitorpazos.picturepassword.ui.MainActivity
+import com.aitorpazos.picturepassword.util.WallpaperHelper
 
 class LockScreenService : Service() {
 
@@ -90,6 +92,8 @@ class LockScreenService : Service() {
                             // it's there in case the first launch was too slow.
                             showLockScreen()
                         }
+                        // Check for wallpaper changes when screen turns on
+                        checkWallpaperChange()
                     }
                 }
             }
@@ -106,6 +110,73 @@ class LockScreenService : Service() {
             try { unregisterReceiver(it) } catch (_: Exception) {}
         }
         screenReceiver = null
+    }
+
+    /**
+     * Check if the system wallpaper has changed since setup.
+     * Only relevant when image source is SYSTEM_WALLPAPER.
+     * If changed, flag it and show a notification to the user.
+     */
+    private fun checkWallpaperChange() {
+        try {
+            val settingsStore = SettingsStore(this)
+            if (settingsStore.imageSource != ImageSource.SYSTEM_WALLPAPER) return
+            if (settingsStore.wallpaperChanged) return  // Already flagged
+
+            val storedHash = settingsStore.wallpaperHash
+            if (storedHash.isEmpty()) return
+
+            if (WallpaperHelper.hasWallpaperChanged(this, storedHash)) {
+                settingsStore.wallpaperChanged = true
+                showWallpaperChangedNotification()
+            }
+        } catch (_: Exception) {
+            // Don't crash the service for wallpaper check failures
+        }
+    }
+
+    /**
+     * Show a notification warning the user that their wallpaper has changed
+     * and they should re-setup their picture password.
+     */
+    private fun showWallpaperChangedNotification() {
+        val openMainIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        val pendingIntent = PendingIntent.getActivity(
+            this, 1, openMainIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notification = NotificationCompat.Builder(this, WALLPAPER_CHANNEL_ID)
+            .setContentTitle("⚠️ Wallpaper Changed")
+            .setContentText("Your lock screen wallpaper has changed. Please re-setup your picture password.")
+            .setStyle(NotificationCompat.BigTextStyle().bigText(
+                "Your system lock screen wallpaper has changed since you set up your picture password. " +
+                "Your current password still works, but the image may look different. " +
+                "Tap to open Picture Password and re-run setup."
+            ))
+            .setSmallIcon(R.drawable.ic_lock)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pendingIntent)
+            .build()
+
+        val manager = getSystemService(NotificationManager::class.java)
+        createWallpaperNotificationChannel()
+        manager.notify(WALLPAPER_NOTIFICATION_ID, notification)
+    }
+
+    private fun createWallpaperNotificationChannel() {
+        val channel = NotificationChannel(
+            WALLPAPER_CHANNEL_ID,
+            "Wallpaper Change Alerts",
+            NotificationManager.IMPORTANCE_HIGH
+        ).apply {
+            description = "Notifies when the system wallpaper changes and picture password needs re-setup"
+        }
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(channel)
     }
 
     /**
@@ -186,7 +257,9 @@ class LockScreenService : Service() {
 
     companion object {
         private const val CHANNEL_ID = "picture_password_service"
+        private const val WALLPAPER_CHANNEL_ID = "picture_password_wallpaper"
         private const val NOTIFICATION_ID = 1001
+        private const val WALLPAPER_NOTIFICATION_ID = 1002
         const val EXTRA_FROM_SERVICE = "from_lock_service"
 
         /** Singleton reference so the activity can call back to remove the shield. */
