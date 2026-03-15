@@ -362,16 +362,16 @@ class MainActivity : AppCompatActivity() {
         if (enabled) {
             serviceToggle.text = "Disable Lock Screen"
             serviceToggle.setBackgroundResource(R.drawable.bg_button_danger)
-            serviceToggle.setTextColor(0xAAFF6B6BL.toInt())
+            serviceToggle.setTextColor(ContextCompat.getColor(this, R.color.button_danger_text))
             serviceStatus.text = "🛡️ Lock screen service is active"
-            serviceStatus.setTextColor(0xFF81C784.toInt())
+            serviceStatus.setTextColor(ContextCompat.getColor(this, R.color.service_active))
             settingsSection.visibility = View.VISIBLE
         } else {
             serviceToggle.text = "Enable as Lock Screen"
             serviceToggle.setBackgroundResource(R.drawable.bg_button_primary)
-            serviceToggle.setTextColor(0xFFFFFFFF.toInt())
+            serviceToggle.setTextColor(ContextCompat.getColor(this, R.color.on_primary))
             serviceStatus.text = "Lock screen service is off"
-            serviceStatus.setTextColor(0x88FFFFFF.toInt())
+            serviceStatus.setTextColor(ContextCompat.getColor(this, R.color.service_inactive))
             settingsSection.visibility = View.GONE
         }
     }

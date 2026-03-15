@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark theme color overrides -->
+    <color name="background">#0D1117</color>
+    <color name="surface">#161B22</color>
+    <color name="surface_variant">#1A1A2E</color>
+    <color name="on_background">#EEFFFFFF</color>
+    <color name="on_surface">#EEFFFFFF</color>
+    <color name="on_surface_secondary">#CCFFFFFF</color>
+    <color name="on_surface_tertiary">#88FFFFFF</color>
+    <color name="on_surface_hint">#66FFFFFF</color>
+    <color name="on_surface_faint">#44FFFFFF</color>
+    <color name="divider">#1AFFFFFF</color>
+
+    <!-- Text hierarchy for main screen -->
+    <color name="text_title">#EEFFFFFF</color>
+    <color name="text_subtitle">#66FFFFFF</color>
+    <color name="text_body">#CCFFFFFF</color>
+    <color name="text_body_secondary">#BBFFFFFF</color>
+    <color name="text_section_title">#CCFFFFFF</color>
+    <color name="text_perm_title">#DDFFFFFF</color>
+    <color name="text_perm_desc">#66FFFFFF</color>
+    <color name="text_version">#33FFFFFF</color>
+
+    <!-- Button colors -->
+    <color name="button_primary_start">#1976D2</color>
+    <color name="button_primary_end">#1565C0</color>
+    <color name="button_primary_ripple">#331976D2</color>
+    <color name="button_secondary_bg">#0DFFFFFF</color>
+    <color name="button_secondary_stroke">#22FFFFFF</color>
+    <color name="button_secondary_ripple">#22FFFFFF</color>
+    <color name="button_secondary_text">#CCFFFFFF</color>
+    <color name="button_danger_stroke">#33FF6B6B</color>
+    <color name="button_danger_ripple">#22FF4444</color>
+    <color name="button_danger_text">#AAFF6B6B</color>
+
+    <!-- Permission item -->
+    <color name="perm_item_bg">#0DFFFFFF</color>
+    <color name="perm_item_ripple">#1AFFFFFF</color>
+
+    <!-- Image placeholder -->
+    <color name="placeholder_bg_start">#12121A</color>
+    <color name="placeholder_bg_center">#1A1A2E</color>
+    <color name="placeholder_bg_end">#12121A</color>
+    <color name="placeholder_border">#18FFFFFF</color>
+    <color name="placeholder_border_dash">#08FFFFFF</color>
+    <color name="placeholder_text">#44FFFFFF</color>
+
+    <!-- Image preview -->
+    <color name="preview_bg">#0AFFFFFF</color>
+
+    <!-- Setup backgrounds -->
+    <color name="setup_bg">#0D1117</color>
+    <color name="setup_overlay">#CC000000</color>
+    <color name="setup_bottom_overlay">#DD000000</color>
+
+    <!-- Warning banner -->
+    <color name="warning_bg">#33FF6B00</color>
+    <color name="warning_title">#FFFFAA44</color>
+    <color name="warning_body">#CCFFCC88</color>
+
+    <!-- Service status -->
+    <color name="service_active">#FF81C784</color>
+    <color name="service_inactive">#88FFFFFF</color>
+
+    <!-- Radio button tint -->
+    <color name="radio_tint">#64B5F6</color>
+
+    <!-- On primary (text on primary-colored buttons) -->
+    <color name="on_primary">#FFFFFF</color>
+
+    <!-- Lock screen biometric link -->
+    <color name="biometric_link">#64B5F6</color>
+
+    <!-- Lock screen overlay -->
+    <color name="lock_overlay">#88000000</color>
+    <color name="setup_top_overlay">#CC000000</color>
+    <color name="setup_number_overlay">#DD000000</color>
+</resources>

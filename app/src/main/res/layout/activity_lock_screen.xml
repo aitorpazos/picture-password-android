@@ -24,7 +24,7 @@
         android:orientation="vertical"
         android:padding="16dp"
         android:gravity="center"
-        android:background="#88000000">
+        android:background="@color/lock_overlay">
 
         <TextView
             android:id="@+id/lockStatusText"
@@ -42,7 +42,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="🔐 Use Biometrics"
-            android:textColor="#64B5F6"
+            android:textColor="@color/biometric_link"
             android:textSize="14sp"
             android:padding="8dp"
             android:clickable="true"

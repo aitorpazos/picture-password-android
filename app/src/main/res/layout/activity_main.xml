@@ -19,7 +19,7 @@
         android:text="Picture Password"
         android:textSize="28sp"
         android:textStyle="bold"
-        android:textColor="#EEFFFFFF"
+        android:textColor="@color/on_background"
         android:letterSpacing="0.02"
         android:layout_marginTop="32dp"
         android:layout_marginBottom="4dp" />
@@ -29,7 +29,7 @@
         android:layout_height="wrap_content"
         android:text="BlackBerry-style picture unlock for Android"
         android:textSize="13sp"
-        android:textColor="#66FFFFFF"
+        android:textColor="@color/on_surface_hint"
         android:fontFamily="sans-serif-light"
         android:layout_marginBottom="28dp" />
 
@@ -39,7 +39,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="#33FF6B00"
+        android:background="@color/warning_bg"
         android:padding="14dp"
         android:layout_marginBottom="12dp"
         android:visibility="gone">
@@ -50,14 +50,14 @@
             android:text="⚠️ Wallpaper Changed"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="#FFFFAA44" />
+            android:textColor="@color/warning_title" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Your system wallpaper has changed since setup. Your password still works, but the image may look different. Please re-run setup to update."
             android:textSize="12sp"
-            android:textColor="#CCFFCC88"
+            android:textColor="@color/warning_body"
             android:fontFamily="sans-serif-light"
             android:layout_marginTop="4dp" />
     </LinearLayout>
@@ -102,7 +102,7 @@
                 android:layout_height="wrap_content"
                 android:text="No Picture Password configured"
                 android:textSize="13sp"
-                android:textColor="#44FFFFFF"
+                android:textColor="@color/on_surface_faint"
                 android:fontFamily="sans-serif-light" />
         </LinearLayout>
     </FrameLayout>
@@ -114,7 +114,7 @@
         android:layout_height="wrap_content"
         android:text="No Picture Password configured"
         android:textSize="14sp"
-        android:textColor="#88FFFFFF"
+        android:textColor="@color/on_surface_tertiary"
         android:fontFamily="sans-serif-light"
         android:layout_marginBottom="20dp" />
 
@@ -140,7 +140,7 @@
         android:layout_height="52dp"
         android:text="Test Unlock"
         android:textSize="14sp"
-        android:textColor="#CCFFFFFF"
+        android:textColor="@color/on_surface_secondary"
         android:textAllCaps="false"
         android:fontFamily="sans-serif"
         android:letterSpacing="0.01"
@@ -154,7 +154,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#1AFFFFFF"
+        android:background="@color/divider"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="16dp" />
 
@@ -165,7 +165,7 @@
         android:text="Lock Screen Service"
         android:textSize="16sp"
         android:textStyle="bold"
-        android:textColor="#CCFFFFFF"
+        android:textColor="@color/on_surface_secondary"
         android:layout_marginBottom="8dp" />
 
     <TextView
@@ -174,7 +174,7 @@
         android:layout_height="wrap_content"
         android:text="Lock screen service is off"
         android:textSize="13sp"
-        android:textColor="#88FFFFFF"
+        android:textColor="@color/on_surface_tertiary"
         android:fontFamily="sans-serif-light"
         android:layout_marginBottom="12dp" />
 
@@ -211,7 +211,7 @@
             android:text="Unlock Mode"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="#CCFFFFFF"
+            android:textColor="@color/on_surface_secondary"
             android:layout_marginBottom="12dp" />
 
         <RadioGroup
@@ -225,9 +225,9 @@
                 android:layout_height="wrap_content"
                 android:text="Picture Password only"
                 android:textSize="13sp"
-                android:textColor="#BBFFFFFF"
+                android:textColor="@color/on_surface_secondary"
                 android:fontFamily="sans-serif-light"
-                android:buttonTint="#64B5F6"
+                android:buttonTint="@color/radio_tint"
                 android:paddingStart="8dp"
                 android:layout_marginBottom="6dp" />
 
@@ -237,9 +237,9 @@
                 android:layout_height="wrap_content"
                 android:text="Biometrics only"
                 android:textSize="13sp"
-                android:textColor="#BBFFFFFF"
+                android:textColor="@color/on_surface_secondary"
                 android:fontFamily="sans-serif-light"
-                android:buttonTint="#64B5F6"
+                android:buttonTint="@color/radio_tint"
                 android:paddingStart="8dp"
                 android:layout_marginBottom="6dp" />
 
@@ -249,9 +249,9 @@
                 android:layout_height="wrap_content"
                 android:text="Both required (2FA)"
                 android:textSize="13sp"
-                android:textColor="#BBFFFFFF"
+                android:textColor="@color/on_surface_secondary"
                 android:fontFamily="sans-serif-light"
-                android:buttonTint="#64B5F6"
+                android:buttonTint="@color/radio_tint"
                 android:paddingStart="8dp"
                 android:layout_marginBottom="6dp" />
 
@@ -261,9 +261,9 @@
                 android:layout_height="wrap_content"
                 android:text="Either unlocks"
                 android:textSize="13sp"
-                android:textColor="#BBFFFFFF"
+                android:textColor="@color/on_surface_secondary"
                 android:fontFamily="sans-serif-light"
-                android:buttonTint="#64B5F6"
+                android:buttonTint="@color/radio_tint"
                 android:paddingStart="8dp" />
         </RadioGroup>
 
@@ -272,7 +272,7 @@
             android:layout_height="wrap_content"
             android:text="💡 For best security, set your system lock to Swipe and use Picture Password as your primary lock."
             android:textSize="11sp"
-            android:textColor="#66FFFFFF"
+            android:textColor="@color/on_surface_hint"
             android:fontFamily="sans-serif-light"
             android:layout_marginTop="12dp" />
     </LinearLayout>
@@ -294,7 +294,7 @@
             android:text="⚙️ Required Permissions"
             android:textSize="14sp"
             android:textStyle="bold"
-            android:textColor="#CCFFFFFF"
+            android:textColor="@color/on_surface_secondary"
             android:layout_marginBottom="12dp" />
 
         <TextView
@@ -302,7 +302,7 @@
             android:layout_height="wrap_content"
             android:text="The lock screen service needs these permissions to work properly. Tap each item to open the relevant settings."
             android:textSize="12sp"
-            android:textColor="#88FFFFFF"
+            android:textColor="@color/on_surface_tertiary"
             android:fontFamily="sans-serif-light"
             android:layout_marginBottom="12dp" />
 
@@ -336,7 +336,7 @@
                     android:layout_height="wrap_content"
                     android:text="Display over other apps"
                     android:textSize="13sp"
-                    android:textColor="#DDFFFFFF"
+                    android:textColor="@color/on_surface_secondary"
                     android:fontFamily="sans-serif-medium" />
 
                 <TextView
@@ -344,7 +344,7 @@
                     android:layout_height="wrap_content"
                     android:text="Required to show the lock screen. If greyed out, go to App Info → Allow restricted settings first."
                     android:textSize="11sp"
-                    android:textColor="#66FFFFFF"
+                    android:textColor="@color/on_surface_hint"
                     android:fontFamily="sans-serif-light" />
             </LinearLayout>
         </LinearLayout>
@@ -379,7 +379,7 @@
                     android:layout_height="wrap_content"
                     android:text="Notifications"
                     android:textSize="13sp"
-                    android:textColor="#DDFFFFFF"
+                    android:textColor="@color/on_surface_secondary"
                     android:fontFamily="sans-serif-medium" />
 
                 <TextView
@@ -387,7 +387,7 @@
                     android:layout_height="wrap_content"
                     android:text="Required for the foreground service. Android requires a visible notification."
                     android:textSize="11sp"
-                    android:textColor="#66FFFFFF"
+                    android:textColor="@color/on_surface_hint"
                     android:fontFamily="sans-serif-light" />
             </LinearLayout>
         </LinearLayout>
@@ -422,7 +422,7 @@
                     android:layout_height="wrap_content"
                     android:text="Unrestricted battery"
                     android:textSize="13sp"
-                    android:textColor="#DDFFFFFF"
+                    android:textColor="@color/on_surface_secondary"
                     android:fontFamily="sans-serif-medium" />
 
                 <TextView
@@ -430,7 +430,7 @@
                     android:layout_height="wrap_content"
                     android:text="Prevents Android from killing the service in the background."
                     android:textSize="11sp"
-                    android:textColor="#66FFFFFF"
+                    android:textColor="@color/on_surface_hint"
                     android:fontFamily="sans-serif-light" />
             </LinearLayout>
         </LinearLayout>
@@ -465,7 +465,7 @@
                     android:layout_height="wrap_content"
                     android:text="Allow restricted settings"
                     android:textSize="13sp"
-                    android:textColor="#DDFFFFFF"
+                    android:textColor="@color/on_surface_secondary"
                     android:fontFamily="sans-serif-medium" />
 
                 <TextView
@@ -473,7 +473,7 @@
                     android:layout_height="wrap_content"
                     android:text="On Android 13+: Settings → Apps → Picture Password → ⋮ menu → Allow restricted settings. Required before overlay permission can be granted."
                     android:textSize="11sp"
-                    android:textColor="#66FFFFFF"
+                    android:textColor="@color/on_surface_hint"
                     android:fontFamily="sans-serif-light" />
             </LinearLayout>
         </LinearLayout>
@@ -508,7 +508,7 @@
                     android:layout_height="wrap_content"
                     android:text="Set system lock to Swipe"
                     android:textSize="13sp"
-                    android:textColor="#DDFFFFFF"
+                    android:textColor="@color/on_surface_secondary"
                     android:fontFamily="sans-serif-medium" />
 
                 <TextView
@@ -516,7 +516,7 @@
                     android:layout_height="wrap_content"
                     android:text="Settings → Security → Screen lock → Swipe. This lets Picture Password be your primary lock."
                     android:textSize="11sp"
-                    android:textColor="#66FFFFFF"
+                    android:textColor="@color/on_surface_hint"
                     android:fontFamily="sans-serif-light" />
             </LinearLayout>
         </LinearLayout>
@@ -552,7 +552,7 @@
                     android:layout_height="wrap_content"
                     android:text="Photos &amp; media access"
                     android:textSize="13sp"
-                    android:textColor="#DDFFFFFF"
+                    android:textColor="@color/on_surface_secondary"
                     android:fontFamily="sans-serif-medium" />
 
                 <TextView
@@ -560,7 +560,7 @@
                     android:layout_height="wrap_content"
                     android:text="Required to read the system wallpaper. Settings → Apps → Picture Password → Permissions → Photos and videos."
                     android:textSize="11sp"
-                    android:textColor="#66FFFFFF"
+                    android:textColor="@color/on_surface_hint"
                     android:fontFamily="sans-serif-light" />
             </LinearLayout>
         </LinearLayout>
@@ -570,7 +570,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="#1AFFFFFF"
+        android:background="@color/divider"
         android:layout_marginBottom="16dp" />
 
     <!-- Danger action: Clear Password -->
@@ -580,7 +580,7 @@
         android:layout_height="52dp"
         android:text="Clear Password"
         android:textSize="14sp"
-        android:textColor="#AAFF6B6B"
+        android:textColor="@color/button_danger_text"
         android:textAllCaps="false"
         android:fontFamily="sans-serif"
         android:letterSpacing="0.01"
@@ -596,7 +596,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="11sp"
-        android:textColor="#33FFFFFF"
+        android:textColor="@color/on_surface_faint"
         android:fontFamily="sans-serif-light"
         android:layout_marginBottom="24dp" />
 

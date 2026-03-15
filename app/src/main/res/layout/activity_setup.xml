@@ -2,7 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0D1117"
+    android:background="@color/setup_bg"
     android:fitsSystemWindows="true">
 
     <ImageView
@@ -24,7 +24,7 @@
         android:orientation="vertical"
         android:layout_gravity="top"
         android:padding="16dp"
-        android:background="#CC000000">
+        android:background="@color/setup_overlay">
 
         <TextView
             android:id="@+id/setupInstructionText"
@@ -51,7 +51,7 @@
         android:layout_gravity="bottom"
         android:orientation="vertical"
         android:padding="12dp"
-        android:background="#DD000000"
+        android:background="@color/setup_bottom_overlay"
         android:visibility="gone" />
 
 </FrameLayout>

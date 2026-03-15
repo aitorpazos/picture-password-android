@@ -223,7 +223,7 @@ class SetupActivity : AppCompatActivity() {
 
         val label = TextView(this).apply {
             text = "Choose image source:"
-            setTextColor(Color.WHITE)
+            setTextColor(ContextCompat.getColor(context, R.color.on_surface))
             textSize = 15f
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, dpToPx(12))
@@ -246,7 +246,7 @@ class SetupActivity : AppCompatActivity() {
         if (!hasWallpaperPermission()) {
             val hint = TextView(this).apply {
                 text = "ℹ️ Media permission will be requested when tapped"
-                setTextColor(Color.argb(120, 150, 200, 255))
+                setTextColor(ContextCompat.getColor(context, R.color.on_surface_hint))
                 textSize = 11f
                 gravity = Gravity.CENTER
                 setPadding(0, dpToPx(6), 0, 0)
@@ -257,7 +257,7 @@ class SetupActivity : AppCompatActivity() {
             if (wallpaperBitmap == null) {
                 val hint = TextView(this).apply {
                     text = "⚠️ System wallpaper not available (may be a live wallpaper)"
-                    setTextColor(Color.argb(120, 255, 200, 100))
+                    setTextColor(ContextCompat.getColor(context, R.color.warning_title))
                     textSize = 11f
                     gravity = Gravity.CENTER
                     setPadding(0, dpToPx(6), 0, 0)
@@ -271,7 +271,7 @@ class SetupActivity : AppCompatActivity() {
         return TextView(this).apply {
             this.text = text
             textSize = 15f
-            setTextColor(Color.WHITE)
+            setTextColor(ContextCompat.getColor(context, R.color.on_surface))
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
             gravity = Gravity.CENTER
             setPadding(dpToPx(16), dpToPx(14), dpToPx(16), dpToPx(14))
@@ -285,8 +285,8 @@ class SetupActivity : AppCompatActivity() {
             background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = dpToPx(12).toFloat()
-                setColor(Color.argb(100, 40, 40, 60))
-                setStroke(dpToPx(1), Color.argb(120, 255, 255, 255))
+                setColor(ContextCompat.getColor(context, R.color.button_secondary_bg))
+                setStroke(dpToPx(1), ContextCompat.getColor(context, R.color.button_secondary_stroke))
             }
 
             setOnClickListener { onClick() }
@@ -302,7 +302,7 @@ class SetupActivity : AppCompatActivity() {
 
         val label = TextView(this).apply {
             text = "Tap your secret number:"
-            setTextColor(Color.WHITE)
+            setTextColor(ContextCompat.getColor(context, R.color.on_surface))
             textSize = 15f
             gravity = Gravity.CENTER
             setPadding(0, 0, 0, dpToPx(8))
@@ -341,7 +341,7 @@ class SetupActivity : AppCompatActivity() {
         return TextView(this).apply {
             text = digit.toString()
             textSize = 24f
-            setTextColor(Color.WHITE)
+            setTextColor(ContextCompat.getColor(context, R.color.on_surface))
             typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
             gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(size, size).apply {
@@ -354,16 +354,16 @@ class SetupActivity : AppCompatActivity() {
             background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
                 cornerRadius = dpToPx(12).toFloat()
-                setColor(Color.argb(120, 0, 0, 0))
-                setStroke(dpToPx(1), Color.argb(180, 255, 255, 255))
+                setColor(ContextCompat.getColor(context, R.color.button_secondary_bg))
+                setStroke(dpToPx(1), ContextCompat.getColor(context, R.color.button_secondary_stroke))
             }
 
             setOnClickListener {
                 selectedNumber = digit
 
                 (background as? GradientDrawable)?.apply {
-                    setColor(Color.argb(200, 25, 118, 210))
-                    setStroke(dpToPx(2), Color.argb(255, 100, 180, 255))
+                    setColor(ContextCompat.getColor(context, R.color.primary))
+                    setStroke(dpToPx(2), ContextCompat.getColor(context, R.color.radio_tint))
                 }
 
                 this.post {

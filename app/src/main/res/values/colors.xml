@@ -1,6 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Brand colors -->
     <color name="primary">#1976D2</color>
     <color name="primary_dark">#1565C0</color>
     <color name="accent">#FF6F00</color>
+
+    <!-- Light theme colors (default) -->
+    <color name="background">#FAFAFA</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_variant">#F0F0F4</color>
+    <color name="on_background">#1A1A1A</color>
+    <color name="on_surface">#1A1A1A</color>
+    <color name="on_surface_secondary">#555555</color>
+    <color name="on_surface_tertiary">#888888</color>
+    <color name="on_surface_hint">#AAAAAA</color>
+    <color name="on_surface_faint">#CCCCCC</color>
+    <color name="divider">#1A000000</color>
+
+    <!-- Text hierarchy for main screen -->
+    <color name="text_title">#DD000000</color>
+    <color name="text_subtitle">#66000000</color>
+    <color name="text_body">#CC000000</color>
+    <color name="text_body_secondary">#BB000000</color>
+    <color name="text_section_title">#CC000000</color>
+    <color name="text_perm_title">#DD000000</color>
+    <color name="text_perm_desc">#66000000</color>
+    <color name="text_version">#33000000</color>
+
+    <!-- Button colors -->
+    <color name="button_primary_start">#1976D2</color>
+    <color name="button_primary_end">#1565C0</color>
+    <color name="button_primary_ripple">#331976D2</color>
+    <color name="button_secondary_bg">#0D000000</color>
+    <color name="button_secondary_stroke">#22000000</color>
+    <color name="button_secondary_ripple">#22000000</color>
+    <color name="button_secondary_text">#CC000000</color>
+    <color name="button_danger_stroke">#33FF6B6B</color>
+    <color name="button_danger_ripple">#22FF4444</color>
+    <color name="button_danger_text">#CCFF4444</color>
+
+    <!-- Permission item -->
+    <color name="perm_item_bg">#0D000000</color>
+    <color name="perm_item_ripple">#1A000000</color>
+
+    <!-- Image placeholder -->
+    <color name="placeholder_bg_start">#F0F0F4</color>
+    <color name="placeholder_bg_center">#E8E8EE</color>
+    <color name="placeholder_bg_end">#F0F0F4</color>
+    <color name="placeholder_border">#18000000</color>
+    <color name="placeholder_border_dash">#08000000</color>
+    <color name="placeholder_text">#44000000</color>
+
+    <!-- Image preview -->
+    <color name="preview_bg">#0A000000</color>
+
+    <!-- Setup backgrounds -->
+    <color name="setup_bg">#F5F5F5</color>
+    <color name="setup_overlay">#CCF5F5F5</color>
+    <color name="setup_bottom_overlay">#DDF5F5F5</color>
+
+    <!-- Warning banner -->
+    <color name="warning_bg">#33FF6B00</color>
+    <color name="warning_title">#FFCC6600</color>
+    <color name="warning_body">#CC996633</color>
+
+    <!-- Service status -->
+    <color name="service_active">#FF388E3C</color>
+    <color name="service_inactive">#888888</color>
+
+    <!-- Radio button tint -->
+    <color name="radio_tint">#1976D2</color>
+
+    <!-- On primary (text on primary-colored buttons) -->
+    <color name="on_primary">#FFFFFF</color>
+
+    <!-- Lock screen biometric link -->
+    <color name="biometric_link">#1976D2</color>
+
+    <!-- Lock screen overlay -->
+    <color name="lock_overlay">#88000000</color>
+    <color name="setup_top_overlay">#CC000000</color>
+    <color name="setup_number_overlay">#DD000000</color>
 </resources>
