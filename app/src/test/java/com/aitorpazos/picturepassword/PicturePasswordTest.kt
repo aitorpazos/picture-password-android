@@ -249,11 +249,22 @@ class UnlockVerifierTest {
         val originCol = (grid.cols - NumberGridFactory.VISIBLE_COLS) / 2f
         val originRow = 0f
 
-        // Find where digit 2 is and set config to expect digit 9 there
+        // Find where digit 2 is ON SCREEN and set config to expect digit 9 there
         val positions = grid.positionsOf(2)
-        val (col, row) = positions.first()
-        val digitX = (col - originCol) * cellSize + cellSize / 2f
-        val digitY = (row - originRow) * cellSize + cellSize / 2f
+        var digitX = 0f
+        var digitY = 0f
+        var found = false
+        for ((c, r) in positions) {
+            val dx = (c - originCol) * cellSize + cellSize / 2f
+            val dy = (r - originRow) * cellSize + cellSize / 2f
+            if (dx in 0.05f..0.95f && dy >= 0f) {
+                digitX = dx
+                digitY = dy
+                found = true
+                break
+            }
+        }
+        assertTrue("Should find an on-screen instance of digit 2", found)
 
         val config = makeConfig(9, digitX, digitY, 0.02f)
         assertFalse(UnlockVerifier.verify(grid, config, cellSize, originCol, originRow))

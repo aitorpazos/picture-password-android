@@ -9,6 +9,16 @@ package com.aitorpazos.picturepassword.model
 object UnlockVerifier {
 
     /**
+     * Compute the centred origin row for a given grid, visible column count,
+     * and screen aspect ratio (height / width).
+     * This must match the calculation in NumberGridView.onDraw().
+     */
+    fun computeOriginRow(grid: NumberGrid, visibleCols: Int, aspectRatio: Float): Float {
+        val visibleRows = (aspectRatio * visibleCols).toInt()
+        return (grid.rows - visibleRows) / 2f
+    }
+
+    /**
      * Check if the current grid state represents a valid unlock.
      *
      * @param grid The current number grid with user's drag offset applied

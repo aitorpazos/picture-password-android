@@ -1,7 +1,13 @@
 package com.aitorpazos.picturepassword.ui
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import android.view.View
 import android.widget.Button
 import android.widget.FrameLayout
@@ -10,7 +16,9 @@ import android.widget.LinearLayout
 import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.aitorpazos.picturepassword.R
 import com.aitorpazos.picturepassword.crypto.PasswordStore
 import com.aitorpazos.picturepassword.crypto.SettingsStore
@@ -22,6 +30,10 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var passwordStore: PasswordStore
     private lateinit var settingsStore: SettingsStore
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { _ -> refreshPermissionsUI() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,6 +110,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Permission item click handlers
+        setupPermissionClickHandlers()
+
         updateUI(statusText, testButton, clearButton, previewImage, previewCard, placeholderContent,
             serviceToggle, serviceStatus, settingsSection)
     }
@@ -115,6 +130,114 @@ class MainActivity : AppCompatActivity() {
         val settingsSection = findViewById<LinearLayout>(R.id.settingsSection)
         updateUI(statusText, testButton, clearButton, previewImage, previewCard, placeholderContent,
             serviceToggle, serviceStatus, settingsSection)
+        refreshPermissionsUI()
+    }
+
+    private fun setupPermissionClickHandlers() {
+        // Overlay permission
+        findViewById<View>(R.id.permOverlay).setOnClickListener {
+            val intent = Intent(
+                Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                Uri.parse("package:$packageName")
+            )
+            startActivity(intent)
+        }
+
+        // Notification permission
+        findViewById<View>(R.id.permNotification).setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED
+                ) {
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                } else {
+                    // Already granted — open notification settings
+                    openAppNotificationSettings()
+                }
+            } else {
+                openAppNotificationSettings()
+            }
+        }
+
+        // Battery optimization
+        findViewById<View>(R.id.permBattery).setOnClickListener {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                data = Uri.parse("package:$packageName")
+            }
+            try {
+                startActivity(intent)
+            } catch (_: Exception) {
+                // Fallback to battery optimization list
+                startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+            }
+        }
+
+        // Restricted settings (opens app info)
+        findViewById<View>(R.id.permRestricted).setOnClickListener {
+            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                data = Uri.parse("package:$packageName")
+            }
+            startActivity(intent)
+        }
+
+        // System lock (opens security settings)
+        findViewById<View>(R.id.permSystemLock).setOnClickListener {
+            try {
+                startActivity(Intent(Settings.ACTION_SECURITY_SETTINGS))
+            } catch (_: Exception) {
+                startActivity(Intent(Settings.ACTION_SETTINGS))
+            }
+        }
+    }
+
+    private fun openAppNotificationSettings() {
+        val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+        }
+        startActivity(intent)
+    }
+
+    private fun refreshPermissionsUI() {
+        val permissionsSection = findViewById<LinearLayout>(R.id.permissionsSection)
+
+        // Only show permissions section when service is enabled or password is configured
+        val configured = passwordStore.isConfigured()
+        if (!configured) {
+            permissionsSection.visibility = View.GONE
+            return
+        }
+        permissionsSection.visibility = View.VISIBLE
+
+        // Overlay permission
+        val hasOverlay = Settings.canDrawOverlays(this)
+        updatePermStatus(R.id.permOverlayStatus, hasOverlay)
+
+        // Notification permission
+        val hasNotification = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+                PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+        updatePermStatus(R.id.permNotificationStatus, hasNotification)
+
+        // Battery optimization
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
+        val hasBattery = pm.isIgnoringBatteryOptimizations(packageName)
+        updatePermStatus(R.id.permBatteryStatus, hasBattery)
+
+        // Restricted settings — we can't directly check this, so we infer from overlay
+        // If overlay is granted, restricted settings must have been allowed
+        updatePermStatus(R.id.permRestrictedStatus, hasOverlay)
+    }
+
+    private fun updatePermStatus(textViewId: Int, granted: Boolean) {
+        val tv = findViewById<TextView>(textViewId)
+        if (granted) {
+            tv.text = "✅"
+        } else {
+            tv.text = "❌"
+        }
     }
 
     private fun updateUI(
@@ -163,6 +286,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         updateServiceUI(serviceToggle, serviceStatus, settingsSection)
+        refreshPermissionsUI()
     }
 
     private fun updateServiceUI(

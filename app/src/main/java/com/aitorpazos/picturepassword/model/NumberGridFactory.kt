@@ -16,11 +16,11 @@ import kotlin.random.Random
  */
 object NumberGridFactory {
 
-    /** Total grid columns (wider than screen so panning reveals more) */
-    const val DEFAULT_COLS = 12
+    /** Total grid columns (much wider than screen so panning never reveals edges) */
+    const val DEFAULT_COLS = 30
 
-    /** Total grid rows (taller than screen so panning reveals more) */
-    const val DEFAULT_ROWS = 20
+    /** Total grid rows (much taller than screen so panning never reveals edges) */
+    const val DEFAULT_ROWS = 50
 
     /**
      * How many columns are visible on screen at once.

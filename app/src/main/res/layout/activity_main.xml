@@ -248,6 +248,251 @@
             android:layout_marginTop="12dp" />
     </LinearLayout>
 
+    <!-- Permissions Guide Section -->
+    <LinearLayout
+        android:id="@+id/permissionsSection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:background="@drawable/bg_button_secondary"
+        android:padding="16dp"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="⚙️ Required Permissions"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#CCFFFFFF"
+            android:layout_marginBottom="12dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="The lock screen service needs these permissions to work properly. Tap each item to open the relevant settings."
+            android:textSize="12sp"
+            android:textColor="#88FFFFFF"
+            android:fontFamily="sans-serif-light"
+            android:layout_marginBottom="12dp" />
+
+        <!-- Overlay permission -->
+        <LinearLayout
+            android:id="@+id/permOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_perm_item"
+            android:padding="12dp"
+            android:layout_marginBottom="6dp">
+
+            <TextView
+                android:id="@+id/permOverlayStatus"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:gravity="center"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Display over other apps"
+                    android:textSize="13sp"
+                    android:textColor="#DDFFFFFF"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Required to show the lock screen. If greyed out, go to App Info → Allow restricted settings first."
+                    android:textSize="11sp"
+                    android:textColor="#66FFFFFF"
+                    android:fontFamily="sans-serif-light" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Notification permission -->
+        <LinearLayout
+            android:id="@+id/permNotification"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_perm_item"
+            android:padding="12dp"
+            android:layout_marginBottom="6dp">
+
+            <TextView
+                android:id="@+id/permNotificationStatus"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:gravity="center"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Notifications"
+                    android:textSize="13sp"
+                    android:textColor="#DDFFFFFF"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Required for the foreground service. Android requires a visible notification."
+                    android:textSize="11sp"
+                    android:textColor="#66FFFFFF"
+                    android:fontFamily="sans-serif-light" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Battery optimization -->
+        <LinearLayout
+            android:id="@+id/permBattery"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_perm_item"
+            android:padding="12dp"
+            android:layout_marginBottom="6dp">
+
+            <TextView
+                android:id="@+id/permBatteryStatus"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:gravity="center"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Unrestricted battery"
+                    android:textSize="13sp"
+                    android:textColor="#DDFFFFFF"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Prevents Android from killing the service in the background."
+                    android:textSize="11sp"
+                    android:textColor="#66FFFFFF"
+                    android:fontFamily="sans-serif-light" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Restricted settings hint -->
+        <LinearLayout
+            android:id="@+id/permRestricted"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_perm_item"
+            android:padding="12dp"
+            android:layout_marginBottom="6dp">
+
+            <TextView
+                android:id="@+id/permRestrictedStatus"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:gravity="center"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Allow restricted settings"
+                    android:textSize="13sp"
+                    android:textColor="#DDFFFFFF"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="On Android 13+: Settings → Apps → Picture Password → ⋮ menu → Allow restricted settings. Required before overlay permission can be granted."
+                    android:textSize="11sp"
+                    android:textColor="#66FFFFFF"
+                    android:fontFamily="sans-serif-light" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- System lock recommendation -->
+        <LinearLayout
+            android:id="@+id/permSystemLock"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_perm_item"
+            android:padding="12dp"
+            android:layout_marginBottom="2dp">
+
+            <TextView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:gravity="center"
+                android:text="💡"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Set system lock to Swipe"
+                    android:textSize="13sp"
+                    android:textColor="#DDFFFFFF"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Settings → Security → Screen lock → Swipe. This lets Picture Password be your primary lock."
+                    android:textSize="11sp"
+                    android:textColor="#66FFFFFF"
+                    android:fontFamily="sans-serif-light" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
     <!-- Divider -->
     <View
         android:layout_width="match_parent"

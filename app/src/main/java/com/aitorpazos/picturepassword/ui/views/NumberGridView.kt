@@ -149,8 +149,9 @@ class NumberGridView @JvmOverloads constructor(
 
         // Origin: the grid column/row that maps to the top-left of the screen
         // before any drag. We centre the grid so there's room to pan in all directions.
+        val visibleRows = (h / cellPx).toInt()
         val originCol = (grid.cols - visibleCols) / 2f
-        val originRow = 0f
+        val originRow = (grid.rows - visibleRows) / 2f
 
         // Pixel offset from drag
         val dragPxX = totalDragX
@@ -238,6 +239,21 @@ class NumberGridView @JvmOverloads constructor(
         totalDragX = 0f
         totalDragY = 0f
         invalidate()
+    }
+
+    /**
+     * Compute the origin row used for vertical centering of the grid.
+     * This must match the value used in onDraw so the unlock verifier
+     * uses the same coordinate space.
+     */
+    fun computeOriginRow(): Float {
+        val w = width.toFloat()
+        val h = height.toFloat()
+        if (w == 0f || h == 0f) return 0f
+        val grid = numberGrid ?: return 0f
+        val cellPx = w / visibleCols
+        val visibleRows = (h / cellPx).toInt()
+        return (grid.rows - visibleRows) / 2f
     }
 
     companion object {
