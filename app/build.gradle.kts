@@ -11,8 +11,8 @@ android {
         applicationId = "com.aitorpazos.picturepassword"
         minSdk = 28 // Android 9 (Pie)
         targetSdk = 35
-        versionCode = 5
-        versionName = "1.4.0"
+        versionCode = 7
+        versionName = "1.4.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
