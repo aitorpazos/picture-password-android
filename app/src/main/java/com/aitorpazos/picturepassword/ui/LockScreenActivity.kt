@@ -130,7 +130,7 @@ class LockScreenActivity : AppCompatActivity() {
 
                 val cellSizeNorm = 1f / currentVisibleCols
                 val originCol = (currentGrid.cols - currentVisibleCols) / 2f
-                val originRow = 0f
+                val originRow = gridView.computeOriginRow()
 
                 val verifyResult = UnlockVerifier.verify(movedGrid, config!!, cellSizeNorm, originCol, originRow)
 
