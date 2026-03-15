@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:fitsSystemWindows="true">
+
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
     android:padding="24dp"
-    android:gravity="center_horizontal"
-    android:fitsSystemWindows="true">
+    android:gravity="center_horizontal">
 
     <!-- App title -->
     <TextView
@@ -82,7 +87,7 @@
         android:textSize="14sp"
         android:textColor="#88FFFFFF"
         android:fontFamily="sans-serif-light"
-        android:layout_marginBottom="28dp" />
+        android:layout_marginBottom="20dp" />
 
     <!-- Primary action: Setup -->
     <Button
@@ -116,6 +121,140 @@
         android:alpha="0.4"
         android:layout_marginBottom="10dp" />
 
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1AFFFFFF"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Lock Screen Service Section -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Lock Screen Service"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="#CCFFFFFF"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:id="@+id/serviceStatusText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Lock screen service is off"
+        android:textSize="13sp"
+        android:textColor="#88FFFFFF"
+        android:fontFamily="sans-serif-light"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:id="@+id/serviceToggleButton"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="Enable as Lock Screen"
+        android:textSize="14sp"
+        android:textColor="@android:color/white"
+        android:textAllCaps="false"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.01"
+        android:background="@drawable/bg_button_primary"
+        android:stateListAnimator="@null"
+        android:enabled="false"
+        android:alpha="0.4"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Unlock Mode Settings (visible when service is enabled) -->
+    <LinearLayout
+        android:id="@+id/settingsSection"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:visibility="gone"
+        android:background="@drawable/bg_button_secondary"
+        android:padding="16dp"
+        android:layout_marginBottom="16dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Unlock Mode"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#CCFFFFFF"
+            android:layout_marginBottom="12dp" />
+
+        <RadioGroup
+            android:id="@+id/unlockModeGroup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <RadioButton
+                android:id="@+id/radioPictureOnly"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Picture Password only"
+                android:textSize="13sp"
+                android:textColor="#BBFFFFFF"
+                android:fontFamily="sans-serif-light"
+                android:buttonTint="#64B5F6"
+                android:paddingStart="8dp"
+                android:layout_marginBottom="6dp" />
+
+            <RadioButton
+                android:id="@+id/radioBiometricOnly"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Biometrics only"
+                android:textSize="13sp"
+                android:textColor="#BBFFFFFF"
+                android:fontFamily="sans-serif-light"
+                android:buttonTint="#64B5F6"
+                android:paddingStart="8dp"
+                android:layout_marginBottom="6dp" />
+
+            <RadioButton
+                android:id="@+id/radioBothRequired"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Both required (2FA)"
+                android:textSize="13sp"
+                android:textColor="#BBFFFFFF"
+                android:fontFamily="sans-serif-light"
+                android:buttonTint="#64B5F6"
+                android:paddingStart="8dp"
+                android:layout_marginBottom="6dp" />
+
+            <RadioButton
+                android:id="@+id/radioEither"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Either unlocks"
+                android:textSize="13sp"
+                android:textColor="#BBFFFFFF"
+                android:fontFamily="sans-serif-light"
+                android:buttonTint="#64B5F6"
+                android:paddingStart="8dp" />
+        </RadioGroup>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="💡 For best security, set your system lock to Swipe and use Picture Password as your primary lock."
+            android:textSize="11sp"
+            android:textColor="#66FFFFFF"
+            android:fontFamily="sans-serif-light"
+            android:layout_marginTop="12dp" />
+    </LinearLayout>
+
+    <!-- Divider -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#1AFFFFFF"
+        android:layout_marginBottom="16dp" />
+
     <!-- Danger action: Clear Password -->
     <Button
         android:id="@+id/clearButton"
@@ -130,6 +269,8 @@
         android:background="@drawable/bg_button_danger"
         android:stateListAnimator="@null"
         android:enabled="false"
-        android:alpha="0.4" />
+        android:alpha="0.4"
+        android:layout_marginBottom="24dp" />
 
 </LinearLayout>
+</ScrollView>
