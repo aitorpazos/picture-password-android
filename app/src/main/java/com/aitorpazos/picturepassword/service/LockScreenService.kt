@@ -78,10 +78,16 @@ class LockScreenService : Service() {
                         // Immediately add a black overlay so when the screen turns back on
                         // the user sees black instead of the home screen.
                         addShield()
+                        // Also launch the lock activity immediately while screen is off.
+                        // It will be ready in the window stack when the screen turns on.
+                        // The shield covers any gap.
+                        showLockScreen()
                     }
                     Intent.ACTION_SCREEN_ON -> {
                         if (pendingLock) {
                             pendingLock = false
+                            // Activity was already launched on SCREEN_OFF, but ensure
+                            // it's there in case the first launch was too slow.
                             showLockScreen()
                         }
                     }
@@ -122,7 +128,10 @@ class LockScreenService : Service() {
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
                     WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                    @Suppress("DEPRECATION")
+                    WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+                    WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
             PixelFormat.OPAQUE
         )
 

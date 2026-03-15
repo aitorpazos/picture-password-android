@@ -12,7 +12,7 @@ android {
         minSdk = 28 // Android 9 (Pie)
         targetSdk = 35
         versionCode = 8
-        versionName = "1.4.2"
+        versionName = "1.5.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
