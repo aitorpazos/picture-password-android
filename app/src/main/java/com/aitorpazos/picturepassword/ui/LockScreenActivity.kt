@@ -56,9 +56,16 @@ class LockScreenActivity : AppCompatActivity() {
 
         // Show over lock screen
         setShowWhenLocked(true)
-        setTurnScreenOn(true)
 
         isFromService = intent.getBooleanExtra(LockScreenService.EXTRA_FROM_SERVICE, false)
+
+        // Only turn screen on if NOT launched from the SCREEN_OFF service trigger.
+        // When the service fires on SCREEN_OFF, we prepare the lock screen silently
+        // and let the user wake the device themselves (power button).
+        // When launched manually (test unlock), turning screen on is fine.
+        if (!isFromService) {
+            setTurnScreenOn(true)
+        }
 
         // Dismiss the system keyguard so our lock screen takes over
         if (isFromService) {
