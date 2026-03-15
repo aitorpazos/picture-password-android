@@ -6,61 +6,129 @@
     android:padding="24dp"
     android:gravity="center_horizontal">
 
+    <!-- App title -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Picture Password"
         android:textSize="28sp"
         android:textStyle="bold"
+        android:textColor="#EEFFFFFF"
+        android:letterSpacing="0.02"
         android:layout_marginTop="32dp"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="4dp" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="BlackBerry-style picture unlock for Android"
-        android:textSize="14sp"
-        android:textColor="?android:textColorSecondary"
-        android:layout_marginBottom="24dp" />
+        android:textSize="13sp"
+        android:textColor="#66FFFFFF"
+        android:fontFamily="sans-serif-light"
+        android:layout_marginBottom="28dp" />
 
-    <ImageView
-        android:id="@+id/previewImage"
+    <!-- Image preview card -->
+    <FrameLayout
+        android:id="@+id/previewCard"
         android:layout_width="match_parent"
-        android:layout_height="200dp"
-        android:scaleType="centerCrop"
-        android:background="@android:color/darker_gray"
-        android:contentDescription="Password image preview"
-        android:layout_marginBottom="16dp" />
+        android:layout_height="220dp"
+        android:layout_marginBottom="12dp"
+        android:clipToOutline="true"
+        android:outlineProvider="background"
+        android:background="@drawable/bg_image_placeholder"
+        android:elevation="2dp">
 
+        <ImageView
+            android:id="@+id/previewImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="Password image preview"
+            android:visibility="gone" />
+
+        <!-- Placeholder content (shown when no image) -->
+        <LinearLayout
+            android:id="@+id/placeholderContent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="vertical"
+            android:gravity="center_horizontal">
+
+            <ImageView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:src="@drawable/ic_image_placeholder"
+                android:contentDescription="No image"
+                android:layout_marginBottom="14dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No Picture Password configured"
+                android:textSize="13sp"
+                android:textColor="#44FFFFFF"
+                android:fontFamily="sans-serif-light" />
+        </LinearLayout>
+    </FrameLayout>
+
+    <!-- Status text -->
     <TextView
         android:id="@+id/statusText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="No Picture Password configured"
-        android:textSize="16sp"
-        android:layout_marginBottom="24dp" />
+        android:textSize="14sp"
+        android:textColor="#88FFFFFF"
+        android:fontFamily="sans-serif-light"
+        android:layout_marginBottom="28dp" />
 
+    <!-- Primary action: Setup -->
     <Button
         android:id="@+id/setupButton"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="56dp"
         android:text="Setup Picture Password"
-        android:layout_marginBottom="8dp" />
+        android:textSize="15sp"
+        android:textColor="@android:color/white"
+        android:textAllCaps="false"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.01"
+        android:background="@drawable/bg_button_primary"
+        android:stateListAnimator="@null"
+        android:layout_marginBottom="10dp" />
 
+    <!-- Secondary action: Test Unlock -->
     <Button
         android:id="@+id/testButton"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="52dp"
         android:text="Test Unlock"
+        android:textSize="14sp"
+        android:textColor="#CCFFFFFF"
+        android:textAllCaps="false"
+        android:fontFamily="sans-serif"
+        android:letterSpacing="0.01"
+        android:background="@drawable/bg_button_secondary"
+        android:stateListAnimator="@null"
         android:enabled="false"
-        android:layout_marginBottom="8dp" />
+        android:alpha="0.4"
+        android:layout_marginBottom="10dp" />
 
+    <!-- Danger action: Clear Password -->
     <Button
         android:id="@+id/clearButton"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="52dp"
         android:text="Clear Password"
+        android:textSize="14sp"
+        android:textColor="#AAFF6B6B"
+        android:textAllCaps="false"
+        android:fontFamily="sans-serif"
+        android:letterSpacing="0.01"
+        android:background="@drawable/bg_button_danger"
+        android:stateListAnimator="@null"
         android:enabled="false"
-        style="@style/Widget.Material3.Button.OutlinedButton" />
+        android:alpha="0.4" />
 
 </LinearLayout>
