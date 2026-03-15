@@ -487,7 +487,7 @@
             android:gravity="center_vertical"
             android:background="@drawable/bg_perm_item"
             android:padding="12dp"
-            android:layout_marginBottom="2dp">
+            android:layout_marginBottom="6dp">
 
             <TextView
                 android:layout_width="24dp"
@@ -515,6 +515,50 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Settings → Security → Screen lock → Swipe. This lets Picture Password be your primary lock."
+                    android:textSize="11sp"
+                    android:textColor="#66FFFFFF"
+                    android:fontFamily="sans-serif-light" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Media / wallpaper access permission -->
+        <LinearLayout
+            android:id="@+id/permMedia"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_perm_item"
+            android:padding="12dp"
+            android:layout_marginBottom="2dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/permMediaStatus"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:gravity="center"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Photos &amp; media access"
+                    android:textSize="13sp"
+                    android:textColor="#DDFFFFFF"
+                    android:fontFamily="sans-serif-medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Required to read the system wallpaper. Settings → Apps → Picture Password → Permissions → Photos and videos."
                     android:textSize="11sp"
                     android:textColor="#66FFFFFF"
                     android:fontFamily="sans-serif-light" />
