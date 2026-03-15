@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.IBinder
-import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import com.aitorpazos.picturepassword.R
 import com.aitorpazos.picturepassword.crypto.PasswordStore
@@ -20,7 +19,6 @@ import com.aitorpazos.picturepassword.ui.MainActivity
 class LockScreenService : Service() {
 
     private var screenOffReceiver: BroadcastReceiver? = null
-    private var screenOnReceiver: BroadcastReceiver? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -59,7 +57,7 @@ class LockScreenService : Service() {
     }
 
     private fun registerScreenReceivers() {
-        // Listen for screen off → show lock screen
+        // Listen for screen off → prepare lock screen (shown when user wakes device)
         screenOffReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 if (intent.action == Intent.ACTION_SCREEN_OFF) {
@@ -68,28 +66,13 @@ class LockScreenService : Service() {
             }
         }
         registerReceiver(screenOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
-
-        // Listen for user present (system unlock) as a fallback trigger
-        screenOnReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context, intent: Intent) {
-                if (intent.action == Intent.ACTION_USER_PRESENT) {
-                    // If screen is unlocked by system (swipe), show our lock
-                    showLockScreen()
-                }
-            }
-        }
-        registerReceiver(screenOnReceiver, IntentFilter(Intent.ACTION_USER_PRESENT))
     }
 
     private fun unregisterScreenReceivers() {
         screenOffReceiver?.let {
             try { unregisterReceiver(it) } catch (_: Exception) {}
         }
-        screenOnReceiver?.let {
-            try { unregisterReceiver(it) } catch (_: Exception) {}
-        }
         screenOffReceiver = null
-        screenOnReceiver = null
     }
 
     private fun showLockScreen() {
