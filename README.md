@@ -17,6 +17,10 @@ A shoulder-surfing resistant lock screen app inspired by [BlackBerry's Picture P
 5. An observer sees a different gesture each time — they can't tell which number or which spot matters
 
 <p align="center">
+  <img src="docs/demo.gif" alt="Picture Password demo — same password, different gesture every time" width="280" />
+</p>
+
+<p align="center">
   <em>Same password, different gesture every time → shoulder-surfing resistant</em>
 </p>
 
