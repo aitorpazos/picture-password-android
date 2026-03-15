@@ -10,6 +10,12 @@ build/
 *.class
 local.properties
 
+# Signing keys — NEVER commit these
+*.jks
+*.keystore
+*.p12
+*.pem
+
 # IDE
 .idea/
 *.iml
@@ -17,3 +23,8 @@ local.properties
 
 # Logs
 *.log
+
+# Local helper scripts (contain machine-specific paths)
+run-build.sh
+run-tests.sh
+gradlew-local.sh

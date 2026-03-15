@@ -38,9 +38,9 @@ jobs:
 
       - name: Build release APKs (per-ABI + universal)
         env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'REDACTED' }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'picture-password' }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'REDACTED' }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease
 
       - name: Rename APKs

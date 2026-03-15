@@ -22,9 +22,9 @@ android {
             val keystoreFile = rootProject.file("release-keystore.jks")
             if (keystoreFile.exists()) {
                 storeFile = keystoreFile
-                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "REDACTED"
-                keyAlias = System.getenv("KEY_ALIAS") ?: "picture-password"
-                keyPassword = System.getenv("KEY_PASSWORD") ?: "REDACTED"
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
             }
         }
     }

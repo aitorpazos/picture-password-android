@@ -1,5 +1,11 @@
 # Picture Password for Android
 
+> **⚠️ Personal Project — No Maintenance Guarantee**
+>
+> This is a personal project. I don't have the time for proper open-source maintainership — **issues and pull requests are disabled**. The code is provided as-is under the GPLv3 license.
+>
+> If you find this useful and want to take it further, **you are encouraged to fork it** and publish your own version. No permission needed beyond what the license grants.
+
 A shoulder-surfing resistant lock screen app inspired by [BlackBerry's Picture Password](https://en.wikipedia.org/wiki/BlackBerry_10#Security). Choose a photo, pick a secret number and a secret spot — then unlock by dragging the number grid to align your number with your spot. The gesture looks different every time, so observers can't figure out your password.
 
 ## How It Works
@@ -131,4 +137,4 @@ A: Yes! Choose "Both required" for 2FA (picture password + biometrics), "Either 
 
 ## Contributing
 
-Issues and pull requests welcome at [github.com/aitorpazos/picture-password-android](https://github.com/aitorpazos/picture-password-android).
+This is a personal project — issues and pull requests are **disabled**. If you'd like to improve it, please **fork the repository** and publish your own version. The GPLv3 license permits this.
