@@ -54,24 +54,18 @@ class LockScreenActivity : AppCompatActivity() {
             WindowManager.LayoutParams.FLAG_SECURE
         )
 
-        // Show over lock screen
-        setShowWhenLocked(true)
-
         isFromService = intent.getBooleanExtra(LockScreenService.EXTRA_FROM_SERVICE, false)
 
-        // Only turn screen on if NOT launched from the SCREEN_OFF service trigger.
-        // When the service fires on SCREEN_OFF, we prepare the lock screen silently
-        // and let the user wake the device themselves (power button).
-        // When launched manually (test unlock), turning screen on is fine.
-        if (!isFromService) {
-            setTurnScreenOn(true)
-        }
+        // Show over lock screen — always needed
+        setShowWhenLocked(true)
 
-        // Dismiss the system keyguard so our lock screen takes over
-        if (isFromService) {
-            val keyguardManager = getSystemService(KeyguardManager::class.java)
-            keyguardManager?.requestDismissKeyguard(this, null)
-        }
+        // When launched from service (SCREEN_ON), the screen is already on — no need
+        // to turn it on. For manual test unlock from the app, turn screen on.
+        setTurnScreenOn(!isFromService)
+
+        // Dismiss the system keyguard so our lock screen is the only one visible
+        val keyguardManager = getSystemService(KeyguardManager::class.java)
+        keyguardManager?.requestDismissKeyguard(this, null)
 
         setContentView(R.layout.activity_lock_screen)
 

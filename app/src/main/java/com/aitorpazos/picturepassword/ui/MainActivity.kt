@@ -42,6 +42,15 @@ class MainActivity : AppCompatActivity() {
         passwordStore = PasswordStore(this)
         settingsStore = SettingsStore(this)
 
+        // Version hint
+        val versionText = findViewById<TextView>(R.id.versionText)
+        try {
+            val pInfo = packageManager.getPackageInfo(packageName, 0)
+            versionText.text = "v${pInfo.versionName}"
+        } catch (_: Exception) {
+            versionText.text = ""
+        }
+
         val statusText = findViewById<TextView>(R.id.statusText)
         val setupButton = findViewById<Button>(R.id.setupButton)
         val testButton = findViewById<Button>(R.id.testButton)
