@@ -1,6 +1,7 @@
 package com.aitorpazos.picturepassword.ui
 
 import android.os.Bundle
+import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -25,9 +26,17 @@ class LockScreenActivity : AppCompatActivity() {
     private lateinit var passwordStore: PasswordStore
     private var config: PicturePasswordConfig? = null
     private var failedAttempts = 0
+    private var currentVisibleCols = NumberGridFactory.VISIBLE_COLS
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // Prevent screenshots and screen recording for security
+        window.setFlags(
+            WindowManager.LayoutParams.FLAG_SECURE,
+            WindowManager.LayoutParams.FLAG_SECURE
+        )
+
         setContentView(R.layout.activity_lock_screen)
 
         passwordStore = PasswordStore(this)
@@ -51,8 +60,13 @@ class LockScreenActivity : AppCompatActivity() {
             imageView.setImageResource(android.R.color.black)
         }
 
-        // Create a fresh random grid
+        // Create a fresh random grid with randomized density
+        currentVisibleCols = NumberGridFactory.randomVisibleCols()
+        gridView.visibleCols = currentVisibleCols
         gridView.numberGrid = NumberGridFactory.createRandomGrid()
+
+        // No target point shown on lock screen — user must remember the spot
+        gridView.showTargetPoint = false
 
         // Handle grid release — check unlock
         gridView.onGridReleased = { offsetX, offsetY ->
@@ -60,24 +74,23 @@ class LockScreenActivity : AppCompatActivity() {
             if (currentGrid != null) {
                 val movedGrid = currentGrid.withOffset(offsetX, offsetY)
 
-                // Compute the same cell size and origin that the view uses
-                val cellSizeNorm = 1f / NumberGridFactory.VISIBLE_COLS
-                val originCol = (currentGrid.cols - NumberGridFactory.VISIBLE_COLS) / 2f
+                val cellSizeNorm = 1f / currentVisibleCols
+                val originCol = (currentGrid.cols - currentVisibleCols) / 2f
                 val originRow = 0f
 
-                if (UnlockVerifier.verify(movedGrid, config!!, cellSizeNorm, originCol, originRow)) {
+                val verifyResult = UnlockVerifier.verify(movedGrid, config!!, cellSizeNorm, originCol, originRow)
+
+                if (verifyResult) {
                     statusText.text = "Unlocked! ✓"
                     Toast.makeText(this, "Unlocked!", Toast.LENGTH_SHORT).show()
                     finish()
                 } else {
                     failedAttempts++
-                    statusText.text = "Try again ($failedAttempts failed)"
-                    // Reset grid with new random positions
+                    statusText.text = "Incorrect — try again"
+                    // Reset grid with new random positions AND new random density
+                    currentVisibleCols = NumberGridFactory.randomVisibleCols()
+                    gridView.visibleCols = currentVisibleCols
                     gridView.numberGrid = NumberGridFactory.createRandomGrid()
-
-                    if (failedAttempts >= 3) {
-                        statusText.text = "Too many attempts. Use biometrics or try again."
-                    }
                 }
             }
         }

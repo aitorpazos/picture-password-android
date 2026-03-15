@@ -33,6 +33,13 @@ class NumberGridView @JvmOverloads constructor(
             invalidate()
         }
 
+    /** How many columns are visible on screen. Controls digit size/density. */
+    var visibleCols: Int = NumberGridFactory.VISIBLE_COLS
+        set(value) {
+            field = value
+            invalidate()
+        }
+
     var onGridMoved: ((offsetX: Float, offsetY: Float) -> Unit)? = null
     var onGridReleased: ((offsetX: Float, offsetY: Float) -> Unit)? = null
 
@@ -43,7 +50,7 @@ class NumberGridView @JvmOverloads constructor(
             invalidate()
         }
 
-    /** Show a target point indicator (used during setup) */
+    /** Show a target point indicator (used during setup confirmation step) */
     var showTargetPoint: Boolean = false
     var targetPointX: Float = 0f
     var targetPointY: Float = 0f
@@ -88,18 +95,22 @@ class NumberGridView @JvmOverloads constructor(
         style = Paint.Style.STROKE
     }
 
-    /** Target point ring (setup mode) */
+    /** Target point ring (setup confirmation step) */
     private val targetPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.argb(180, 255, 60, 60)
         style = Paint.Style.STROKE
         strokeWidth = 4f
     }
 
-    /** Target point fill (setup mode) */
+    /** Target point fill (setup confirmation step) */
     private val targetFillPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.argb(50, 255, 60, 60)
         style = Paint.Style.FILL
     }
+
+    /** Tolerance radius in width-fraction units for drawing the target circle.
+     *  This should match config.toleranceRadius; set from the activity. */
+    var toleranceRadius: Float = DEFAULT_TOLERANCE
 
     // ---- Drawing ----
 
@@ -110,11 +121,13 @@ class NumberGridView @JvmOverloads constructor(
         val h = height.toFloat()
         if (w == 0f || h == 0f) return
 
-        // Draw target point if in setup mode
+        // Draw target point if enabled (setup confirmation only)
         if (showTargetPoint) {
             val tx = targetPointX * w
-            val ty = targetPointY * h
-            val targetRadius = minOf(w, h) * DEFAULT_TOLERANCE
+            // targetPointY is in width-fraction units, so multiply by width not height
+            val ty = targetPointY * w
+            val targetRadius = w * toleranceRadius
+
             canvas.drawCircle(tx, ty, targetRadius, targetFillPaint)
             canvas.drawCircle(tx, ty, targetRadius, targetPaint)
             canvas.drawCircle(tx, ty, 6f, targetPaint)
@@ -123,21 +136,21 @@ class NumberGridView @JvmOverloads constructor(
         val grid = numberGrid ?: return
 
         // Cell size in pixels: screen width divided by visible columns
-        val cellPx = w / NumberGridFactory.VISIBLE_COLS
+        val cellPx = w / visibleCols
 
         // Text size scales with cell size — no circles, just text
         val fontSize = cellPx * 0.55f
         textPaint.textSize = fontSize
         textStrokePaint.textSize = fontSize
-        textStrokePaint.strokeWidth = fontSize * 0.12f  // outline thickness
+        textStrokePaint.strokeWidth = fontSize * 0.12f
         highlightTextPaint.textSize = fontSize
         highlightStrokePaint.textSize = fontSize
         highlightStrokePaint.strokeWidth = fontSize * 0.12f
 
         // Origin: the grid column/row that maps to the top-left of the screen
         // before any drag. We centre the grid so there's room to pan in all directions.
-        val originCol = (grid.cols - NumberGridFactory.VISIBLE_COLS) / 2f
-        val originRow = 0f  // start from top; grid is tall enough to extend below screen
+        val originCol = (grid.cols - visibleCols) / 2f
+        val originRow = 0f
 
         // Pixel offset from drag
         val dragPxX = totalDragX
@@ -147,14 +160,13 @@ class NumberGridView @JvmOverloads constructor(
         val margin = cellPx * 0.5f
 
         // Determine visible cell range (with 1-cell margin for partial visibility)
-        val firstVisibleCol = ((- dragPxX / cellPx) + originCol - 1).toInt().coerceAtLeast(0)
-        val lastVisibleCol = (firstVisibleCol + NumberGridFactory.VISIBLE_COLS + 3).coerceAtMost(grid.cols - 1)
-        val firstVisibleRow = ((- dragPxY / cellPx) + originRow - 1).toInt().coerceAtLeast(0)
+        val firstVisibleCol = ((-dragPxX / cellPx) + originCol - 1).toInt().coerceAtLeast(0)
+        val lastVisibleCol = (firstVisibleCol + visibleCols + 3).coerceAtMost(grid.cols - 1)
+        val firstVisibleRow = ((-dragPxY / cellPx) + originRow - 1).toInt().coerceAtLeast(0)
         val lastVisibleRow = (firstVisibleRow + (h / cellPx).toInt() + 3).coerceAtMost(grid.rows - 1)
 
         for (row in firstVisibleRow..lastVisibleRow) {
             for (col in firstVisibleCol..lastVisibleCol) {
-                // Bounds guard — skip if indices fell outside the grid
                 if (col < 0 || col >= grid.cols || row < 0 || row >= grid.rows) continue
                 val digit = grid.digitAt(col, row)
 
@@ -171,10 +183,14 @@ class NumberGridView @JvmOverloads constructor(
                 val isHighlighted = digit == highlightedDigit
 
                 // Draw dark stroke outline first (border), then fill on top
-                canvas.drawText(digit.toString(), cx, textY,
-                    if (isHighlighted) highlightStrokePaint else textStrokePaint)
-                canvas.drawText(digit.toString(), cx, textY,
-                    if (isHighlighted) highlightTextPaint else textPaint)
+                canvas.drawText(
+                    digit.toString(), cx, textY,
+                    if (isHighlighted) highlightStrokePaint else textStrokePaint
+                )
+                canvas.drawText(
+                    digit.toString(), cx, textY,
+                    if (isHighlighted) highlightTextPaint else textPaint
+                )
             }
         }
     }
@@ -202,8 +218,7 @@ class NumberGridView @JvmOverloads constructor(
                     lastTouchX = event.x
                     lastTouchY = event.y
 
-                    // Report normalised offset (fraction of screen)
-                    onGridMoved?.invoke(totalDragX / width, totalDragY / height)
+                    onGridMoved?.invoke(totalDragX / width, totalDragY / width)
                     invalidate()
                 }
                 return true
@@ -211,7 +226,7 @@ class NumberGridView @JvmOverloads constructor(
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 if (isDragging) {
                     isDragging = false
-                    onGridReleased?.invoke(totalDragX / width, totalDragY / height)
+                    onGridReleased?.invoke(totalDragX / width, totalDragY / width)
                 }
                 return true
             }

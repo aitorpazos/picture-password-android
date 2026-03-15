@@ -60,13 +60,18 @@ data class NumberGrid(
      * Check if any instance of [digit] is within [tolerance] of the target point
      * when the grid is rendered with a given cell size and origin offset.
      *
+     * All coordinates are in "fraction of view width" units. The grid uses square
+     * cells sized as a fraction of view width, so both X and Y positions are
+     * expressed in the same unit (width-fractions). The target point and drag
+     * offsets must also be in width-fraction units.
+     *
      * @param digit the secret digit
-     * @param targetX target X in normalized screen coords (0..1)
-     * @param targetY target Y in normalized screen coords (0..1)
+     * @param targetX target X in width-fraction coords (0 = left edge, 1 = right edge)
+     * @param targetY target Y in width-fraction coords (0 = top edge, aspectRatio = bottom)
      * @param cellSize cell size as fraction of screen width
      * @param originCol the column index that maps to screen-left before any drag
      * @param originRow the row index that maps to screen-top before any drag
-     * @param tolerance max distance in normalized coords
+     * @param tolerance max distance in width-fraction coords
      */
     fun isDigitAtPoint(
         digit: Int,

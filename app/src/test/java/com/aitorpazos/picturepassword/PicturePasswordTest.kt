@@ -130,6 +130,24 @@ class NumberGridTest {
     }
 
     @Test
+    fun `randomVisibleCols returns value within range`() {
+        for (seed in 1L..100L) {
+            val cols = NumberGridFactory.randomVisibleCols(Random(seed))
+            assertTrue("randomVisibleCols ($cols) should be >= MIN_VISIBLE_COLS",
+                cols >= NumberGridFactory.MIN_VISIBLE_COLS)
+            assertTrue("randomVisibleCols ($cols) should be <= MAX_VISIBLE_COLS",
+                cols <= NumberGridFactory.MAX_VISIBLE_COLS)
+        }
+    }
+
+    @Test
+    fun `randomVisibleCols produces varying values`() {
+        val values = (1L..100L).map { NumberGridFactory.randomVisibleCols(Random(it)) }.toSet()
+        assertTrue("randomVisibleCols should produce at least 2 distinct values, got $values",
+            values.size >= 2)
+    }
+
+    @Test
     fun `grid equality works with IntArray`() {
         val cells1 = intArrayOf(1, 2, 3, 4)
         val cells2 = intArrayOf(1, 2, 3, 4)

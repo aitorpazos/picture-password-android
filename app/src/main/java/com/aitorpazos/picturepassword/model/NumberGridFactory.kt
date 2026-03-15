@@ -29,6 +29,21 @@ object NumberGridFactory {
     const val VISIBLE_COLS = 6
 
     /**
+     * Range of visible columns for randomized density between unlock attempts.
+     * Lower = bigger digits (fewer on screen), higher = smaller digits (more on screen).
+     * This makes shoulder-surfing much harder since the grid looks different each time.
+     */
+    const val MIN_VISIBLE_COLS = 5
+    const val MAX_VISIBLE_COLS = 8
+
+    /**
+     * Pick a random visible column count for varied grid density.
+     */
+    fun randomVisibleCols(random: Random = Random.Default): Int {
+        return random.nextInt(MIN_VISIBLE_COLS, MAX_VISIBLE_COLS + 1)
+    }
+
+    /**
      * Create a new randomized rectangular number grid.
      *
      * Every cell gets a random digit 0-9. The grid is large enough that
