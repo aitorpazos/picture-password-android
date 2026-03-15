@@ -14,6 +14,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -40,10 +42,11 @@ jobs:
         id: changelog
         run: |
           # Get commits since previous tag
-          PREV_TAG=$(git tag --sort=-version:refname | head -2 | tail -1)
-          if [ -z "$PREV_TAG" ] || [ "$PREV_TAG" = "${GITHUB_REF_NAME}" ]; then
-            CHANGELOG=$(git log --oneline --no-decorate HEAD~10..HEAD)
+          TAG_COUNT=$(git tag --sort=-version:refname | wc -l | tr -d ' ')
+          if [ "$TAG_COUNT" -le 1 ]; then
+            CHANGELOG=$(git log --oneline --no-decorate)
           else
+            PREV_TAG=$(git tag --sort=-version:refname | sed -n '2p')
             CHANGELOG=$(git log --oneline --no-decorate ${PREV_TAG}..${GITHUB_REF_NAME})
           fi
           echo "changelog<<EOF" >> $GITHUB_OUTPUT
