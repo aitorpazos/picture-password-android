@@ -154,6 +154,8 @@ class NumberGridView @JvmOverloads constructor(
 
         for (row in firstVisibleRow..lastVisibleRow) {
             for (col in firstVisibleCol..lastVisibleCol) {
+                // Bounds guard — skip if indices fell outside the grid
+                if (col < 0 || col >= grid.cols || row < 0 || row >= grid.rows) continue
                 val digit = grid.digitAt(col, row)
 
                 // Centre of this cell in screen pixels

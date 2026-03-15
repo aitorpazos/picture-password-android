@@ -34,7 +34,11 @@ data class NumberGrid(
     }
 
     /** Get the digit at a specific grid position */
-    fun digitAt(col: Int, row: Int): Int = cells[row * cols + col]
+    fun digitAt(col: Int, row: Int): Int {
+        val idx = row * cols + col
+        if (idx < 0 || idx >= cells.size) return 0
+        return cells[idx]
+    }
 
     /**
      * Find all grid positions of a specific digit.

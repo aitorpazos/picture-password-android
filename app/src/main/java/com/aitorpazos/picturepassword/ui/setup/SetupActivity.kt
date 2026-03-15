@@ -6,6 +6,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Bundle
+import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.widget.*
@@ -51,91 +52,100 @@ class SetupActivity : AppCompatActivity() {
     }
 
     private fun advanceToStep(step: Int) {
-        setupStep = step
-        val instructionText = findViewById<TextView>(R.id.setupInstructionText)
-        val imageView = findViewById<ImageView>(R.id.setupImageView)
-        val gridView = findViewById<NumberGridView>(R.id.setupGridView)
-        val actionButton = findViewById<Button>(R.id.setupActionButton)
-        val numberButtonsContainer = findViewById<LinearLayout>(R.id.numberButtonsContainer)
+        Log.d("SetupActivity", "advanceToStep($step) called")
+        try {
+            setupStep = step
+            val instructionText = findViewById<TextView>(R.id.setupInstructionText)
+            val imageView = findViewById<ImageView>(R.id.setupImageView)
+            val gridView = findViewById<NumberGridView>(R.id.setupGridView)
+            val actionButton = findViewById<Button>(R.id.setupActionButton)
+            val numberButtonsContainer = findViewById<LinearLayout>(R.id.numberButtonsContainer)
 
-        when (step) {
-            0 -> { // Pick image
-                instructionText.text = "Step 1: Choose a picture for your lock screen"
-                imageView.setImageResource(android.R.color.darker_gray)
-                gridView.visibility = View.GONE
-                numberButtonsContainer.visibility = View.GONE
-                actionButton.text = "Choose Picture"
-                actionButton.visibility = View.VISIBLE
-                actionButton.setOnClickListener {
-                    imagePickerLauncher.launch(arrayOf("image/*"))
-                }
-            }
-            1 -> { // Pick number
-                instructionText.text = "Step 2: Choose your secret number (0-9)"
-                imageView.setImageURI(selectedImageUri)
-                gridView.visibility = View.VISIBLE
-                gridView.numberGrid = NumberGridFactory.createRandomGrid()
-                numberButtonsContainer.visibility = View.VISIBLE
-                actionButton.visibility = View.GONE
-
-                // Build high-contrast number buttons programmatically
-                buildNumberButtons(numberButtonsContainer)
-            }
-            2 -> { // Pick location
-                instructionText.text = "Step 3: Tap your secret spot on the picture\n(This is where you'll drag number $selectedNumber to unlock)"
-                numberButtonsContainer.visibility = View.GONE
-                gridView.visibility = View.GONE
-                actionButton.visibility = View.GONE
-
-                imageView.setOnTouchListener { v, event ->
-                    if (event.action == android.view.MotionEvent.ACTION_UP) {
-                        secretX = event.x / v.width
-                        secretY = event.y / v.height
-                        secretX = secretX.coerceIn(0.05f, 0.95f)
-                        secretY = secretY.coerceIn(0.05f, 0.95f)
-
-                        gridView.visibility = View.VISIBLE
-                        gridView.showTargetPoint = true
-                        gridView.targetPointX = secretX
-                        gridView.targetPointY = secretY
-                        gridView.invalidate()
-
-                        advanceToStep(3)
-                        v.performClick()
-                    }
-                    true
-                }
-            }
-            3 -> { // Confirm
-                instructionText.text = "Your secret: Drag number $selectedNumber to the red target.\nTap 'Save' to confirm."
-                imageView.setOnTouchListener(null)
-                numberButtonsContainer.visibility = View.GONE
-                gridView.visibility = View.VISIBLE
-                gridView.showTargetPoint = true
-                gridView.targetPointX = secretX
-                gridView.targetPointY = secretY
-                gridView.highlightedDigit = selectedNumber
-                gridView.numberGrid = NumberGridFactory.createRandomGrid()
-
-                actionButton.text = "Save Picture Password"
-                actionButton.visibility = View.VISIBLE
-                actionButton.setOnClickListener {
-                    val uri = selectedImageUri
-                    if (uri != null && selectedNumber in 0..9 && secretX >= 0 && secretY >= 0) {
-                        val config = PicturePasswordConfig(
-                            imageUri = uri,
-                            secretNumber = selectedNumber,
-                            secretX = secretX,
-                            secretY = secretY
-                        )
-                        passwordStore.save(config)
-                        Toast.makeText(this, "Picture Password saved!", Toast.LENGTH_SHORT).show()
-                        finish()
-                    } else {
-                        Toast.makeText(this, "Setup incomplete", Toast.LENGTH_SHORT).show()
+            when (step) {
+                0 -> { // Pick image
+                    instructionText.text = "Step 1: Choose a picture for your lock screen"
+                    imageView.setImageResource(android.R.color.transparent)
+                    imageView.setBackgroundResource(R.drawable.bg_setup_empty)
+                    gridView.visibility = View.GONE
+                    numberButtonsContainer.visibility = View.GONE
+                    actionButton.text = "Choose Picture"
+                    actionButton.visibility = View.VISIBLE
+                    actionButton.setOnClickListener {
+                        imagePickerLauncher.launch(arrayOf("image/*"))
                     }
                 }
+                1 -> { // Pick number
+                    instructionText.text = "Step 2: Choose your secret number (0-9)"
+                    imageView.setImageURI(selectedImageUri)
+                    imageView.background = null
+                    gridView.visibility = View.VISIBLE
+                    gridView.numberGrid = NumberGridFactory.createRandomGrid()
+                    gridView.highlightedDigit = -1
+                    numberButtonsContainer.visibility = View.VISIBLE
+                    actionButton.visibility = View.GONE
+
+                    // Build high-contrast number buttons programmatically
+                    buildNumberButtons(numberButtonsContainer)
+                }
+                2 -> { // Pick location
+                    instructionText.text = "Step 3: Tap your secret spot on the picture\n(This is where you'll drag number $selectedNumber to unlock)"
+                    numberButtonsContainer.visibility = View.GONE
+                    gridView.visibility = View.GONE
+                    actionButton.visibility = View.GONE
+
+                    imageView.setOnTouchListener { v, event ->
+                        if (event.action == android.view.MotionEvent.ACTION_UP) {
+                            secretX = event.x / v.width
+                            secretY = event.y / v.height
+                            secretX = secretX.coerceIn(0.05f, 0.95f)
+                            secretY = secretY.coerceIn(0.05f, 0.95f)
+
+                            gridView.visibility = View.VISIBLE
+                            gridView.showTargetPoint = true
+                            gridView.targetPointX = secretX
+                            gridView.targetPointY = secretY
+                            gridView.invalidate()
+
+                            advanceToStep(3)
+                            v.performClick()
+                        }
+                        true
+                    }
+                }
+                3 -> { // Confirm
+                    instructionText.text = "Your secret: Drag number $selectedNumber to the red target.\nTap 'Save' to confirm."
+                    imageView.setOnTouchListener(null)
+                    numberButtonsContainer.visibility = View.GONE
+                    gridView.visibility = View.VISIBLE
+                    gridView.showTargetPoint = true
+                    gridView.targetPointX = secretX
+                    gridView.targetPointY = secretY
+                    gridView.highlightedDigit = selectedNumber
+                    gridView.numberGrid = NumberGridFactory.createRandomGrid()
+
+                    actionButton.text = "Save Picture Password"
+                    actionButton.visibility = View.VISIBLE
+                    actionButton.setOnClickListener {
+                        val uri = selectedImageUri
+                        if (uri != null && selectedNumber in 0..9 && secretX >= 0 && secretY >= 0) {
+                            val config = PicturePasswordConfig(
+                                imageUri = uri,
+                                secretNumber = selectedNumber,
+                                secretX = secretX,
+                                secretY = secretY
+                            )
+                            passwordStore.save(config)
+                            Toast.makeText(this, "Picture Password saved!", Toast.LENGTH_SHORT).show()
+                            finish()
+                        } else {
+                            Toast.makeText(this, "Setup incomplete", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
             }
+        } catch (e: Exception) {
+            Log.e("SetupActivity", "Crash in advanceToStep($step)", e)
+            Toast.makeText(this, "Setup error: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -208,10 +218,33 @@ class SetupActivity : AppCompatActivity() {
             }
 
             setOnClickListener {
-                selectedNumber = digit
-                val gridView = findViewById<NumberGridView>(R.id.setupGridView)
-                gridView.highlightedDigit = digit
-                advanceToStep(2)
+                try {
+                    Log.d("SetupActivity", "Number button tapped: $digit")
+                    selectedNumber = digit
+
+                    // Highlight selected button visually
+                    (background as? GradientDrawable)?.apply {
+                        setColor(Color.argb(200, 25, 118, 210))
+                        setStroke(dpToPx(2), Color.argb(255, 100, 180, 255))
+                    }
+
+                    // Post the step transition to avoid modifying the view tree
+                    // while the click event is still being processed
+                    this.post {
+                        try {
+                            val gridView = this@SetupActivity.findViewById<NumberGridView>(R.id.setupGridView)
+                            gridView?.highlightedDigit = digit
+                            advanceToStep(2)
+                        } catch (e: Exception) {
+                            Log.e("SetupActivity", "Crash on step transition", e)
+                            Toast.makeText(this@SetupActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
+                    }
+                    Log.d("SetupActivity", "Number $digit selected, step transition posted")
+                } catch (e: Exception) {
+                    Log.e("SetupActivity", "Crash on number tap", e)
+                    Toast.makeText(this@SetupActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                }
             }
         }
     }

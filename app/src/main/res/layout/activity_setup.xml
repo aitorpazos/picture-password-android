@@ -8,7 +8,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:scaleType="centerCrop"
-        android:background="@android:color/darker_gray"
+        android:background="@drawable/bg_setup_empty"
         android:contentDescription="Setup background image" />
 
     <com.aitorpazos.picturepassword.ui.views.NumberGridView
@@ -29,9 +29,10 @@
             android:id="@+id/setupInstructionText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Step 1: Choose a picture"
+            android:text="Step 1: Choose a picture for your lock screen"
             android:textColor="@android:color/white"
             android:textSize="16sp"
+            android:fontFamily="sans-serif-light"
             android:layout_marginBottom="8dp" />
 
         <Button
