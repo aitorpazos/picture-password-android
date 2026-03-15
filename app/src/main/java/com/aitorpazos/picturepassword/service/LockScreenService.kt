@@ -18,7 +18,9 @@ import com.aitorpazos.picturepassword.ui.MainActivity
 
 class LockScreenService : Service() {
 
-    private var screenOffReceiver: BroadcastReceiver? = null
+    private var screenReceiver: BroadcastReceiver? = null
+    /** True while the screen is off — we show the lock on the next SCREEN_ON. */
+    private var pendingLock = false
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -44,7 +46,7 @@ class LockScreenService : Service() {
             .build()
         startForeground(NOTIFICATION_ID, notification)
 
-        registerScreenReceivers()
+        registerScreenReceiver()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -52,27 +54,41 @@ class LockScreenService : Service() {
     }
 
     override fun onDestroy() {
-        unregisterScreenReceivers()
+        unregisterScreenReceiver()
         super.onDestroy()
     }
 
-    private fun registerScreenReceivers() {
-        // Listen for screen off → prepare lock screen (shown when user wakes device)
-        screenOffReceiver = object : BroadcastReceiver() {
+    private fun registerScreenReceiver() {
+        // Strategy: mark a pending lock on SCREEN_OFF, then show the lock activity
+        // only on SCREEN_ON (user pressed power button). This avoids any startActivity
+        // call while the screen is off, which on many OEMs causes a spurious wake-up.
+        screenReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
-                if (intent.action == Intent.ACTION_SCREEN_OFF) {
-                    showLockScreen()
+                when (intent.action) {
+                    Intent.ACTION_SCREEN_OFF -> {
+                        pendingLock = true
+                    }
+                    Intent.ACTION_SCREEN_ON -> {
+                        if (pendingLock) {
+                            pendingLock = false
+                            showLockScreen()
+                        }
+                    }
                 }
             }
         }
-        registerReceiver(screenOffReceiver, IntentFilter(Intent.ACTION_SCREEN_OFF))
+        val filter = IntentFilter().apply {
+            addAction(Intent.ACTION_SCREEN_OFF)
+            addAction(Intent.ACTION_SCREEN_ON)
+        }
+        registerReceiver(screenReceiver, filter)
     }
 
-    private fun unregisterScreenReceivers() {
-        screenOffReceiver?.let {
+    private fun unregisterScreenReceiver() {
+        screenReceiver?.let {
             try { unregisterReceiver(it) } catch (_: Exception) {}
         }
-        screenOffReceiver = null
+        screenReceiver = null
     }
 
     private fun showLockScreen() {
@@ -85,7 +101,6 @@ class LockScreenService : Service() {
         val lockIntent = Intent(this, LockScreenActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             addFlags(Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS)
-            addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
             putExtra(EXTRA_FROM_SERVICE, true)
         }
         startActivity(lockIntent)
