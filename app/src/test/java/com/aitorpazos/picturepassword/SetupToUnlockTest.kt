@@ -210,7 +210,7 @@ class SetupToUnlockTest {
         val secretX = 0.5f
         val secretY = 1.2f
         val digit = 4
-        val tolerance = PicturePasswordConfig.DEFAULT_TOLERANCE // 0.10f
+        val tolerance = PicturePasswordConfig.DEFAULT_TOLERANCE // 0.06f
         val config = PicturePasswordConfig(
             imageUri = Uri.parse("content://test/image"),
             secretNumber = digit,

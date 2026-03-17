@@ -52,6 +52,7 @@
             android:excludeFromRecents="true"
             android:taskAffinity=""
             android:launchMode="singleInstance"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.PicturePassword.LockScreen" />
 
         <!-- Boot receiver to re-enable lock screen service -->

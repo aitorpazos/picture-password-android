@@ -25,7 +25,8 @@ data class PicturePasswordConfig(
     }
 
     companion object {
-        /** Tolerance radius in width-fraction units (~12% of screen width ≈ ~0.7 cell) */
-        const val DEFAULT_TOLERANCE = 0.12f
+        /** Tolerance radius in width-fraction units (~6% of screen width ≈ ~0.35 cell).
+         *  Tighter than the original 12% to require more precise positioning. */
+        const val DEFAULT_TOLERANCE = 0.06f
     }
 }
