@@ -61,9 +61,20 @@ class LockScreenActivity : AppCompatActivity() {
         // Show over lock screen — always needed
         setShowWhenLocked(true)
 
-        // When launched from service (SCREEN_ON), the screen is already on — no need
-        // to turn it on. For manual test unlock from the app, turn screen on.
-        setTurnScreenOn(!isFromService)
+        // Always request the screen to turn on at normal brightness.
+        // Even when launched from the service (which fires on SCREEN_OFF and
+        // again on SCREEN_ON), we need this flag so the system wakes the
+        // display at full brightness instead of a dimmed/peek state that
+        // some devices use while the keyguard is still active.
+        setTurnScreenOn(true)
+
+        // Keep the screen on and at full brightness while the lock screen is displayed.
+        // This prevents the system from dimming the screen due to inactivity timeout
+        // or the system keyguard applying its own dim layer.
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        window.attributes = window.attributes.also {
+            it.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+        }
 
         // Dismiss the system keyguard so our lock screen is the only one visible
         val keyguardManager = getSystemService(KeyguardManager::class.java)

@@ -204,7 +204,15 @@ class LockScreenService : Service() {
                     WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
                     WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
             PixelFormat.OPAQUE
-        )
+        ).also {
+            // Prevent the system from dimming behind this overlay.
+            // Setting screenBrightness to BRIGHTNESS_OVERRIDE_NONE means
+            // "don't override" — the user's normal brightness applies.
+            // Setting dimAmount to 0 ensures the overlay itself doesn't
+            // add any dimming effect.
+            it.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+            it.dimAmount = 0f
+        }
 
         try {
             windowManager?.addView(view, params)
