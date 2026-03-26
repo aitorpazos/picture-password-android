@@ -1,9 +1,8 @@
 package com.aitorpazos.picturepassword.ui
 
 import android.app.KeyguardManager
+import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
@@ -48,22 +47,6 @@ class LockScreenActivity : AppCompatActivity() {
     private var biometricUnlocked = false
     private var unlockMode = UnlockMode.EITHER
     private var isFromService = false
-    private val handler = Handler(Looper.getMainLooper())
-
-    /**
-     * Runnable that resets the screen brightness override back to the system
-     * default after a brief wake-up period. During the initial screen-on
-     * transition some devices apply a dim/peek brightness while the keyguard
-     * is still active; we temporarily force full brightness to avoid that,
-     * then revert so the user's normal brightness setting takes over.
-     */
-    private val resetBrightnessRunnable = Runnable {
-        if (!isFinishing) {
-            window.attributes = window.attributes.also {
-                it.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
-            }
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,28 +62,14 @@ class LockScreenActivity : AppCompatActivity() {
         // Show over lock screen — always needed
         setShowWhenLocked(true)
 
-        // Request the screen to turn on. Required so the system wakes the
-        // display instead of staying in a dimmed/peek state that some devices
-        // use while the keyguard is still active.
-        setTurnScreenOn(true)
+        // Only request screen-on when launched manually (e.g. test unlock from
+        // the app). When launched from the service the activity is started while
+        // the screen is still off and will become visible on the next SCREEN_ON
+        // broadcast — requesting turnScreenOn here would keep the screen awake.
+        setTurnScreenOn(!isFromService)
 
-        // Temporarily force full brightness during the wake-up transition.
-        // This avoids the brief dim state some devices show while the keyguard
-        // is still being dismissed. We reset to BRIGHTNESS_OVERRIDE_NONE
-        // (= user's normal brightness) after a short delay.
-        //
-        // NOTE: We intentionally do NOT set FLAG_KEEP_SCREEN_ON here.
-        // That flag prevents the system from ever turning the screen off,
-        // which causes significant battery drain because the activity is
-        // launched on SCREEN_OFF and remains in the task stack.
-        window.attributes = window.attributes.also {
-            it.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
-        }
-        handler.postDelayed(resetBrightnessRunnable, BRIGHTNESS_OVERRIDE_DURATION_MS)
-
-        // Dismiss the system keyguard so our lock screen is the only one visible
-        val keyguardManager = getSystemService(KeyguardManager::class.java)
-        keyguardManager?.requestDismissKeyguard(this, null)
+        // Dismiss the system keyguard so our lock screen is the only one visible.
+        dismissKeyguard()
 
         setContentView(R.layout.activity_lock_screen)
 
@@ -168,6 +137,30 @@ class LockScreenActivity : AppCompatActivity() {
                 setupBiometricButton(biometricBtn, statusText)
             }
         }
+    }
+
+    /**
+     * Called when the activity is re-launched while already running (singleInstance).
+     * This happens on every subsequent SCREEN_OFF → SCREEN_ON cycle because the
+     * service calls startActivity again. We must re-dismiss the keyguard here
+     * because the system re-engages it on each screen-off.
+     */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        // Re-dismiss the keyguard — the system re-engages it each time the
+        // screen turns off, but onCreate won't run again for singleInstance.
+        dismissKeyguard()
+    }
+
+    /**
+     * Dismiss the system keyguard so the user sees our lock screen at full
+     * brightness (their normal brightness setting) instead of the dimmed
+     * peek/keyguard state.
+     */
+    private fun dismissKeyguard() {
+        val keyguardManager = getSystemService(KeyguardManager::class.java)
+        keyguardManager?.requestDismissKeyguard(this, null)
     }
 
     private fun setupGrid(gridView: NumberGridView, statusText: TextView) {
@@ -294,19 +287,5 @@ class LockScreenActivity : AppCompatActivity() {
             @Suppress("DEPRECATION")
             super.onBackPressed()
         }
-    }
-
-    override fun onDestroy() {
-        handler.removeCallbacks(resetBrightnessRunnable)
-        super.onDestroy()
-    }
-
-    companion object {
-        /**
-         * How long (ms) to hold BRIGHTNESS_OVERRIDE_FULL after the activity
-         * is created. This covers the keyguard-dismiss transition on devices
-         * that apply a dim/peek brightness during that window.
-         */
-        private const val BRIGHTNESS_OVERRIDE_DURATION_MS = 1500L
     }
 }
