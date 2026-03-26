@@ -2,6 +2,8 @@ package com.aitorpazos.picturepassword.ui
 
 import android.app.KeyguardManager
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.TextView
@@ -46,6 +48,22 @@ class LockScreenActivity : AppCompatActivity() {
     private var biometricUnlocked = false
     private var unlockMode = UnlockMode.EITHER
     private var isFromService = false
+    private val handler = Handler(Looper.getMainLooper())
+
+    /**
+     * Runnable that resets the screen brightness override back to the system
+     * default after a brief wake-up period. During the initial screen-on
+     * transition some devices apply a dim/peek brightness while the keyguard
+     * is still active; we temporarily force full brightness to avoid that,
+     * then revert so the user's normal brightness setting takes over.
+     */
+    private val resetBrightnessRunnable = Runnable {
+        if (!isFinishing) {
+            window.attributes = window.attributes.also {
+                it.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -61,20 +79,24 @@ class LockScreenActivity : AppCompatActivity() {
         // Show over lock screen — always needed
         setShowWhenLocked(true)
 
-        // Always request the screen to turn on at normal brightness.
-        // Even when launched from the service (which fires on SCREEN_OFF and
-        // again on SCREEN_ON), we need this flag so the system wakes the
-        // display at full brightness instead of a dimmed/peek state that
-        // some devices use while the keyguard is still active.
+        // Request the screen to turn on. Required so the system wakes the
+        // display instead of staying in a dimmed/peek state that some devices
+        // use while the keyguard is still active.
         setTurnScreenOn(true)
 
-        // Keep the screen on and at full brightness while the lock screen is displayed.
-        // This prevents the system from dimming the screen due to inactivity timeout
-        // or the system keyguard applying its own dim layer.
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        // Temporarily force full brightness during the wake-up transition.
+        // This avoids the brief dim state some devices show while the keyguard
+        // is still being dismissed. We reset to BRIGHTNESS_OVERRIDE_NONE
+        // (= user's normal brightness) after a short delay.
+        //
+        // NOTE: We intentionally do NOT set FLAG_KEEP_SCREEN_ON here.
+        // That flag prevents the system from ever turning the screen off,
+        // which causes significant battery drain because the activity is
+        // launched on SCREEN_OFF and remains in the task stack.
         window.attributes = window.attributes.also {
-            it.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+            it.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_FULL
         }
+        handler.postDelayed(resetBrightnessRunnable, BRIGHTNESS_OVERRIDE_DURATION_MS)
 
         // Dismiss the system keyguard so our lock screen is the only one visible
         val keyguardManager = getSystemService(KeyguardManager::class.java)
@@ -272,5 +294,19 @@ class LockScreenActivity : AppCompatActivity() {
             @Suppress("DEPRECATION")
             super.onBackPressed()
         }
+    }
+
+    override fun onDestroy() {
+        handler.removeCallbacks(resetBrightnessRunnable)
+        super.onDestroy()
+    }
+
+    companion object {
+        /**
+         * How long (ms) to hold BRIGHTNESS_OVERRIDE_FULL after the activity
+         * is created. This covers the keyguard-dismiss transition on devices
+         * that apply a dim/peek brightness during that window.
+         */
+        private const val BRIGHTNESS_OVERRIDE_DURATION_MS = 1500L
     }
 }
