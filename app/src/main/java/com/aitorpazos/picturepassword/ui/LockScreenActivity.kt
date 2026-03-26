@@ -59,8 +59,16 @@ class LockScreenActivity : AppCompatActivity() {
 
         isFromService = intent.getBooleanExtra(LockScreenService.EXTRA_FROM_SERVICE, false)
 
-        // Show over lock screen — always needed
+        // Show over lock screen and dismiss the system keyguard.
+        // We use both the Activity-level API and the deprecated window flag as
+        // belt-and-suspenders: setShowWhenLocked makes us visible over the
+        // keyguard, and FLAG_DISMISS_KEYGUARD tells the window manager to
+        // dismiss the keyguard synchronously when our window is shown —
+        // preventing the dim "peek" state that requestDismissKeyguard alone
+        // can leave behind due to its asynchronous nature.
         setShowWhenLocked(true)
+        @Suppress("DEPRECATION")
+        window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD)
 
         // Only request screen-on when launched manually (e.g. test unlock from
         // the app). When launched from the service the activity is started while
@@ -68,7 +76,7 @@ class LockScreenActivity : AppCompatActivity() {
         // broadcast — requesting turnScreenOn here would keep the screen awake.
         setTurnScreenOn(!isFromService)
 
-        // Dismiss the system keyguard so our lock screen is the only one visible.
+        // Also request keyguard dismissal via the modern API as a fallback.
         dismissKeyguard()
 
         setContentView(R.layout.activity_lock_screen)
@@ -148,15 +156,20 @@ class LockScreenActivity : AppCompatActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        // Re-dismiss the keyguard — the system re-engages it each time the
-        // screen turns off, but onCreate won't run again for singleInstance.
+
+        // Re-apply the synchronous keyguard dismissal flag — the system may
+        // have re-engaged the keyguard when the screen turned off.
+        @Suppress("DEPRECATION")
+        window.addFlags(WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD)
+
+        // Also use the modern async API as a fallback.
         dismissKeyguard()
     }
 
     /**
-     * Dismiss the system keyguard so the user sees our lock screen at full
-     * brightness (their normal brightness setting) instead of the dimmed
-     * peek/keyguard state.
+     * Dismiss the system keyguard via the modern async API.
+     * This is a fallback — the primary mechanism is FLAG_DISMISS_KEYGUARD
+     * which is synchronous with window display and avoids the dim peek state.
      */
     private fun dismissKeyguard() {
         val keyguardManager = getSystemService(KeyguardManager::class.java)
